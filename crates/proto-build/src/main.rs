@@ -15,11 +15,11 @@ mod message_graph;
 fn main() {
     let root_dir = PathBuf::from(std::env!("CARGO_MANIFEST_DIR"));
     let proto_dir = root_dir
-        .join("../mys-rpc/vendored/proto")
+        .join("../myso-rpc/vendored/proto")
         .canonicalize()
         .unwrap();
     let out_dir = root_dir
-        .join("../mys-rpc/src/proto/generated")
+        .join("../myso-rpc/src/proto/generated")
         .canonicalize()
         .unwrap();
 
@@ -59,11 +59,11 @@ fn main() {
         .build_client(true)
         .build_server(true)
         .bytes(".")
-        .boxed(".mys.rpc.v2.Input.literal")
-        .boxed(".mys.rpc.v2.Epoch.system_state")
+        .boxed(".myso.rpc.v2.Input.literal")
+        .boxed(".myso.rpc.v2.Epoch.system_state")
         .boxed("json")
-        .message_attribute(".mys.rpc", "#[non_exhaustive]")
-        .enum_attribute(".mys.rpc", "#[non_exhaustive]")
+        .message_attribute(".myso.rpc", "#[non_exhaustive]")
+        .enum_attribute(".myso.rpc", "#[non_exhaustive]")
         .btree_map(".")
         .out_dir(&out_dir)
         .compile_fds(fds.clone())
@@ -102,7 +102,7 @@ fn main() {
         .out_dir(&out_dir)
         .ignore_unknown_fields()
         .btree_map(["."])
-        .build(&[".google.rpc", ".mys"])
+        .build(&[".google.rpc", ".myso"])
         .unwrap();
 
     for (package, fds) in packages {

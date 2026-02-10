@@ -4,9 +4,9 @@ all:: ci ## Default target, runs the CI process
 
 .PHONY: check-features
 check-features: ## Check feature flags for crates
-	$(MAKE) -C crates/mys-sdk-types check-features
-	$(MAKE) -C crates/mys-crypto check-features
-	$(MAKE) -C crates/mys-transaction-builder check-features
+	$(MAKE) -C crates/myso-sdk-types check-features
+	$(MAKE) -C crates/myso-crypto check-features
+	$(MAKE) -C crates/myso-transaction-builder check-features
 
 .PHONY: check-fmt
 check-fmt: ## Check code formatting
@@ -27,8 +27,8 @@ test: ## Run unit tests
 
 .PHONY: wasm
 wasm: ## Build WASM modules
-	$(MAKE) -C crates/mys-sdk-types wasm
-	$(MAKE) -C crates/mys-crypto wasm
+	$(MAKE) -C crates/myso-sdk-types wasm
+	$(MAKE) -C crates/myso-crypto wasm
 
 .PHONY: doc
 doc: ## Generate documentation
@@ -40,7 +40,7 @@ doc-open: ## Generate and open documentation
 
 .PHONY: proto
 proto: ## run protobuf codegen
-	$(MAKE) -C crates/mys-rpc proto
+	$(MAKE) -C crates/myso-rpc proto
 
 .PHONY: is-dirty
 is-dirty: ## Checks if repository is dirty

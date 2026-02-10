@@ -1,26 +1,26 @@
 use anyhow::Result;
 use integration_tests::SuiNetworkBuilder;
 use std::str::FromStr;
-use mys_crypto::SuiSigner;
-use mys_rpc::field::FieldMask;
-use mys_rpc::field::FieldMaskUtil;
-use mys_rpc::proto::mys::rpc::v2::ExecuteTransactionRequest;
-use mys_sdk_types::Address;
-use mys_sdk_types::ObjectReference;
-use mys_sdk_types::StructTag;
-use mys_sdk_types::TypeTag;
-use mys_transaction_builder::Function;
-use mys_transaction_builder::ObjectInput;
-use mys_transaction_builder::TransactionBuilder;
+use myso_crypto::SuiSigner;
+use myso_rpc::field::FieldMask;
+use myso_rpc::field::FieldMaskUtil;
+use myso_rpc::proto::myso::rpc::v2::ExecuteTransactionRequest;
+use myso_sdk_types::Address;
+use myso_sdk_types::ObjectReference;
+use myso_sdk_types::StructTag;
+use myso_sdk_types::TypeTag;
+use myso_transaction_builder::Function;
+use myso_transaction_builder::ObjectInput;
+use myso_transaction_builder::TransactionBuilder;
 
 #[tokio::test]
 async fn test_move_call() -> Result<()> {
     if !integration_tests::check_binary_available() {
-        eprintln!("Skipping integration test: mys binary not found. Set MYS_BINARY env var or install mys to run this test.");
+        eprintln!("Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test.");
         return Ok(());
     }
-    let mut mys = SuiNetworkBuilder::default().build().await?;
-    let private_key = mys.user_keys.first().unwrap();
+    let mut myso = SuiNetworkBuilder::default().build().await?;
+    let private_key = myso.user_keys.first().unwrap();
     let sender = private_key.public_key().derive_address();
 
     // Check that `0x1::option::is_none` move call works when passing `1`
@@ -37,10 +37,10 @@ async fn test_move_call() -> Result<()> {
     let input = builder.pure(&Some(1u64));
     builder.move_call(function, vec![input]);
 
-    let tx = builder.build(&mut mys.client).await.unwrap();
+    let tx = builder.build(&mut myso.client).await.unwrap();
     let signature = private_key.sign_transaction(&tx).unwrap();
 
-    let response = mys
+    let response = myso
         .client
         .execute_transaction_and_wait_for_checkpoint(
             ExecuteTransactionRequest::new(tx.into())
@@ -61,7 +61,7 @@ async fn test_move_call() -> Result<()> {
 //     let mut tx = TransactionBuilder::new();
 //     let (_, pk, _) = helper_setup(&mut tx, &client).await;
 
-//     // transfer 1 MYS from Gas coin
+//     // transfer 1 MYSO from Gas coin
 //     let amount = tx.input(Serialized(&1_000_000_000u64));
 //     let result = tx.split_coins(tx.gas(), vec![amount]);
 //     let recipient_address = Address::generate(rand::thread_rng());
@@ -92,7 +92,7 @@ async fn test_move_call() -> Result<()> {
 //     let coin_obj: Input = (&client.object(*coin, None).await.unwrap().unwrap()).into();
 //     let coin_input = tx.input(coin_obj.with_owned_kind());
 
-//     // transfer 1 MYS
+//     // transfer 1 MYSO
 //     let amount = tx.input(Serialized(&1_000_000_000u64));
 //     tx.split_coins(coin_input, vec![amount]);
 
@@ -167,26 +167,26 @@ async fn test_move_call() -> Result<()> {
 #[tokio::test]
 async fn test_publish() {
     if !integration_tests::check_binary_available() {
-        eprintln!("Skipping integration test: mys binary not found. Set MYS_BINARY env var or install mys to run this test.");
+        eprintln!("Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test.");
         return;
     }
-    let mut mys = SuiNetworkBuilder::default().build().await.unwrap();
-    let private_key = mys.user_keys.first().unwrap();
+    let mut myso = SuiNetworkBuilder::default().build().await.unwrap();
+    let private_key = myso.user_keys.first().unwrap();
     let sender = private_key.public_key().derive_address();
 
     let mut builder = TransactionBuilder::new();
     builder.set_sender(sender);
 
     let package_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/", "packages/test_publish_v1");
-    let (bytecode, _package_digest) = mys.build_package(package_dir.as_ref()).unwrap();
+    let (bytecode, _package_digest) = myso.build_package(package_dir.as_ref()).unwrap();
     let upgrade_cap = builder.publish(bytecode.modules, bytecode.dependencies);
     let sender_arg = builder.pure(&sender);
     builder.transfer_objects(vec![upgrade_cap], sender_arg);
 
-    let tx = builder.build(&mut mys.client).await.unwrap();
+    let tx = builder.build(&mut myso.client).await.unwrap();
     let signature = private_key.sign_transaction(&tx).unwrap();
 
-    let response = mys
+    let response = myso
         .client
         .execute_transaction_and_wait_for_checkpoint(
             ExecuteTransactionRequest::new(tx.into())
@@ -204,26 +204,26 @@ async fn test_publish() {
 #[tokio::test]
 async fn test_upgrade() -> Result<()> {
     if !integration_tests::check_binary_available() {
-        eprintln!("Skipping integration test: mys binary not found. Set MYS_BINARY env var or install mys to run this test.");
+        eprintln!("Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test.");
         return Ok(());
     }
-    let mut mys = SuiNetworkBuilder::default().build().await.unwrap();
-    let private_key = mys.user_keys.first().unwrap();
+    let mut myso = SuiNetworkBuilder::default().build().await.unwrap();
+    let private_key = myso.user_keys.first().unwrap();
     let sender = private_key.public_key().derive_address();
 
     let mut builder = TransactionBuilder::new();
     builder.set_sender(sender);
 
     let package_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/", "packages/test_publish_v2");
-    let (bytecode, _package_digest) = mys.build_package(package_dir.as_ref()).unwrap();
+    let (bytecode, _package_digest) = myso.build_package(package_dir.as_ref()).unwrap();
     let upgrade_cap = builder.publish(bytecode.modules, bytecode.dependencies);
     let sender_arg = builder.pure(&sender);
     builder.transfer_objects(vec![upgrade_cap], sender_arg);
 
-    let tx = builder.build(&mut mys.client).await.unwrap();
+    let tx = builder.build(&mut myso.client).await.unwrap();
     let signature = private_key.sign_transaction(&tx).unwrap();
 
-    let response = mys
+    let response = myso
         .client
         .execute_transaction_and_wait_for_checkpoint(
             ExecuteTransactionRequest::new(tx.into())
@@ -267,7 +267,7 @@ async fn test_upgrade() -> Result<()> {
     builder.set_sender(sender);
 
     let package_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/", "packages/test_publish_v2");
-    let (bytecode, package_digest) = mys.build_package(package_dir.as_ref()).unwrap();
+    let (bytecode, package_digest) = myso.build_package(package_dir.as_ref()).unwrap();
     let upgrade_cap = builder.object(ObjectInput::new(*upgrade_cap.object_id()));
     let policy = builder.pure(&0u8);
     let package_digest = builder.pure(&package_digest);
@@ -299,10 +299,10 @@ async fn test_upgrade() -> Result<()> {
         vec![upgrade_cap, upgrade_receipt],
     );
 
-    let tx = builder.build(&mut mys.client).await.unwrap();
+    let tx = builder.build(&mut myso.client).await.unwrap();
     let signature = private_key.sign_transaction(&tx).unwrap();
 
-    let response = mys
+    let response = myso
         .client
         .execute_transaction_and_wait_for_checkpoint(
             ExecuteTransactionRequest::new(tx.into())

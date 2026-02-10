@@ -9,7 +9,7 @@ We want this Rust workspace to use the latest package versions with consistent c
 
 ## High-Level Task Breakdown
 1. Decide update policy and scope:
-   - Workspace-wide vs. single-crate (`mys-sdk-types`) only.
+   - Workspace-wide vs. single-crate (`myso-sdk-types`) only.
    - Non-breaking (minor/patch) vs. allow major bumps.
 2. Centralize common versions with `[workspace.dependencies]` in root `Cargo.toml` (e.g., `serde`, `serde_json`, `tokio`, `reqwest`, `anyhow`, `thiserror`, `bcs`, `base64ct`, `rand_core`, `serde_with`, `chrono`, `futures`, `url`, `cynic`, etc.).
 3. In each crate, switch to `dep = { workspace = true, features = [..] }` and remove inline versions while keeping crate-specific features.
@@ -29,7 +29,7 @@ We want this Rust workspace to use the latest package versions with consistent c
 - [ ] Document changes and finalize
 
 ## Executor’s Feedback or Assistance Requests
-- Confirm scope: update entire workspace vs. only `crates/mys-sdk-types`.
+- Confirm scope: update entire workspace vs. only `crates/myso-sdk-types`.
 - Confirm policy: latest minor/patch only, or allow major upgrades (potentially breaking)?
 - Approve centralizing common deps using `[workspace.dependencies]`.
 - Any MSRV or environment constraints we must preserve?
@@ -38,17 +38,17 @@ We want this Rust workspace to use the latest package versions with consistent c
 
 ### Major Breaking Changes Fixed
 1. **winnow 0.6 → 0.7**: `PResult` deprecated, replaced with `ModalResult`
-   - Updated all occurrences in `crates/mys-sdk-types/src/type_tag/parse.rs`
+   - Updated all occurrences in `crates/myso-sdk-types/src/type_tag/parse.rs`
    
 2. **getrandom 0.2 → 0.3**: `js` feature renamed to `wasm_js` for wasm32-unknown-unknown targets
-   - Updated in `mys-sdk-types` and `mys-crypto` Cargo.toml wasm dev-dependencies
+   - Updated in `myso-sdk-types` and `myso-crypto` Cargo.toml wasm dev-dependencies
    
 3. **GraphQL schema changes**: Field names updated in active_validators
    - `pendingTotalMysWithdraw` → `pendingTotalMySocialWithdraw`
    - `stakingPoolMysBalance` → `stakingPoolMySocialBalance`
    
 4. **Removed mysns module**: Missing file caused build failure
-   - Removed module declaration and all imports/usages from `mys-graphql-client`
+   - Removed module declaration and all imports/usages from `myso-graphql-client`
    - Removed related public APIs (`resolve_mysns_to_address`, `default_mysns_name`)
 
 ### Updated Dependencies (selected highlights)

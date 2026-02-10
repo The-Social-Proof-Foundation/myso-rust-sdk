@@ -6,20 +6,20 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::process::Child;
 use std::process::Command;
-use mys_crypto::SuiSigner;
-use mys_crypto::ed25519::Ed25519PrivateKey;
-use mys_rpc::Client;
-use mys_rpc::field::FieldMask;
-use mys_rpc::field::FieldMaskUtil;
-use mys_rpc::proto::mys::rpc::v2::ExecuteTransactionRequest;
-use mys_sdk_types::Address;
-use mys_sdk_types::Digest;
-use mys_sdk_types::Identifier;
-use mys_sdk_types::SignatureScheme;
-use mys_transaction_builder::Function;
-use mys_transaction_builder::ObjectInput;
-use mys_transaction_builder::TransactionBuilder;
-use mys_transaction_builder::intent::CoinWithBalance;
+use myso_crypto::SuiSigner;
+use myso_crypto::ed25519::Ed25519PrivateKey;
+use myso_rpc::Client;
+use myso_rpc::field::FieldMask;
+use myso_rpc::field::FieldMaskUtil;
+use myso_rpc::proto::myso::rpc::v2::ExecuteTransactionRequest;
+use myso_sdk_types::Address;
+use myso_sdk_types::Digest;
+use myso_sdk_types::Identifier;
+use myso_sdk_types::SignatureScheme;
+use myso_transaction_builder::Function;
+use myso_transaction_builder::ObjectInput;
+use myso_transaction_builder::TransactionBuilder;
+use myso_transaction_builder::intent::CoinWithBalance;
 use tempfile::TempDir;
 use tokio::time::Duration;
 use tokio::time::sleep;
@@ -29,11 +29,11 @@ const DEFAULT_EPOCH_DURATION_MS: u64 = 60_000;
 const NETWORK_STARTUP_TIMEOUT_SECS: u64 = 30;
 const NETWORK_STARTUP_POLL_INTERVAL_SECS: u64 = 1;
 
-fn find_mys_binary() -> Option<PathBuf> {
-    if let Ok(path) = std::env::var("MYS_BINARY") {
+fn find_myso_binary() -> Option<PathBuf> {
+    if let Ok(path) = std::env::var("MYSO_BINARY") {
         return Some(PathBuf::from(path));
     }
-    if let Ok(output) = Command::new("which").arg("mys").output()
+    if let Ok(output) = Command::new("which").arg("myso").output()
         && output.status.success()
     {
         let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -44,13 +44,13 @@ fn find_mys_binary() -> Option<PathBuf> {
     None
 }
 
-fn mys_binary() -> &'static Path {
-    static MYS_BINARY: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
+fn myso_binary() -> &'static Path {
+    static MYSO_BINARY: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
 
-    MYS_BINARY
+    MYSO_BINARY
         .get_or_init(|| {
-            find_mys_binary()
-                .expect("mys binary not found. Please install mys or set MYS_BINARY env var")
+            find_myso_binary()
+                .expect("myso binary not found. Please install myso or set MYSO_BINARY env var")
         })
         .as_path()
 }
@@ -60,7 +60,7 @@ async fn wait_for_ready(client: &mut Client) -> Result<()> {
     for _ in 0..NETWORK_STARTUP_TIMEOUT_SECS {
         if let Ok(resp) = client
             .ledger_client()
-            .get_service_info(mys_rpc::proto::mys::rpc::v2::GetServiceInfoRequest::default())
+            .get_service_info(myso_rpc::proto::myso::rpc::v2::GetServiceInfoRequest::default())
             .await
             && resp.into_inner().checkpoint_height() > 5
         {
@@ -76,7 +76,7 @@ async fn wait_for_ready(client: &mut Client) -> Result<()> {
 
 /// Handle for a MySo network running via pre-compiled binary
 pub struct SuiNetworkHandle {
-    /// Child process running mys
+    /// Child process running myso
     process: Child,
 
     /// Temporary directory for config (auto-cleanup on drop)
@@ -104,7 +104,7 @@ pub struct SuiNetworkBuilder {
     // pub dir: Option<PathBuf>,
     pub num_validators: usize,
     pub epoch_duration_ms: u64,
-    pub mys_binary_path: Option<PathBuf>, // Optional custom binary
+    pub myso_binary_path: Option<PathBuf>, // Optional custom binary
 }
 
 impl Default for SuiNetworkBuilder {
@@ -112,7 +112,7 @@ impl Default for SuiNetworkBuilder {
         Self {
             num_validators: DEFAULT_NUM_VALIDATORS,
             epoch_duration_ms: DEFAULT_EPOCH_DURATION_MS,
-            mys_binary_path: None,
+            myso_binary_path: None,
             // dir: None,
         }
     }
@@ -130,7 +130,7 @@ impl SuiNetworkBuilder {
     }
 
     pub fn with_binary(mut self, path: PathBuf) -> Self {
-        self.mys_binary_path = Some(path);
+        self.myso_binary_path = Some(path);
         self
     }
 
@@ -140,10 +140,10 @@ impl SuiNetworkBuilder {
     // }
 
     pub async fn build(self) -> Result<SuiNetworkHandle> {
-        // Check for mys binary availability first
-        if find_mys_binary().is_none() {
+        // Check for myso binary availability first
+        if find_myso_binary().is_none() {
             return Err(anyhow::anyhow!(
-                "mys binary not found. Please install mys or set MYS_BINARY env var"
+                "myso binary not found. Please install myso or set MYSO_BINARY env var"
             ));
         }
 
@@ -156,9 +156,9 @@ impl SuiNetworkBuilder {
 
         let rpc_url = format!("http://127.0.0.1:{rpc_port}");
 
-        let mut client = mys_rpc::Client::new(&rpc_url)?;
+        let mut client = myso_rpc::Client::new(&rpc_url)?;
         wait_for_ready(&mut client).await?;
-        let mut mys = SuiNetworkHandle {
+        let mut myso = SuiNetworkHandle {
             process,
             dir,
             rpc_url,
@@ -170,23 +170,23 @@ impl SuiNetworkBuilder {
         };
 
         // Make sure SuiSystemState has been upgraded to v2
-        mys.upgrade_mys_system_state().await?;
+        myso.upgrade_myso_system_state().await?;
 
         // Make sure validator accounts are funded
-        let fund_requests = mys
+        let fund_requests = myso
             .validator_keys
             .keys()
-            // give each validator 1M MYS
+            // give each validator 1M MYSO
             .map(|address| (*address, 1_000_000 * 1_000_000_000))
             .collect::<Vec<_>>();
-        mys.fund(&fund_requests).await?;
+        myso.fund(&fund_requests).await?;
 
-        Ok(mys)
+        Ok(myso)
     }
 
     fn generate_genesis(&self, dir: &Path) -> Result<()> {
         std::fs::create_dir_all(dir)?;
-        let mut cmd = Command::new(mys_binary());
+        let mut cmd = Command::new(myso_binary());
         cmd.arg("genesis")
             .arg("--working-dir")
             .arg(dir)
@@ -208,7 +208,7 @@ impl SuiNetworkBuilder {
         let stderr_name = dir.join("out.stderr");
         let stderr = std::fs::File::create(stderr_name)?;
 
-        let mut cmd = Command::new(mys_binary());
+        let mut cmd = Command::new(myso_binary());
 
         cmd.arg("start")
             .arg("--network.config")
@@ -218,7 +218,7 @@ impl SuiNetworkBuilder {
             .stdout(stdout)
             .stderr(stderr)
             .spawn()
-            .map_err(|e| anyhow!("Failed to run `mys start`: {e}"))
+            .map_err(|e| anyhow!("Failed to run `myso start`: {e}"))
     }
 }
 
@@ -296,7 +296,7 @@ impl SuiNetworkHandle {
 
         for (address, amount) in requests {
             let recipient = builder.pure(address);
-            let coin = builder.intent(CoinWithBalance::mys(*amount));
+            let coin = builder.intent(CoinWithBalance::myso(*amount));
             builder.transfer_objects(vec![coin], recipient);
         }
 
@@ -322,20 +322,20 @@ impl SuiNetworkHandle {
         Ok(())
     }
 
-    async fn upgrade_mys_system_state(&mut self) -> Result<()> {
+    async fn upgrade_myso_system_state(&mut self) -> Result<()> {
         let private_key = self.user_keys.first().unwrap();
         let sender = private_key.public_key().derive_address();
 
         let mut builder = TransactionBuilder::new();
         builder.set_sender(sender);
-        let mys_system = builder.object(ObjectInput::new(Address::from_static("0x5")));
+        let myso_system = builder.object(ObjectInput::new(Address::from_static("0x5")));
         builder.move_call(
             Function::new(
                 Address::from_static("0x3"),
-                Identifier::from_static("mys_system"),
+                Identifier::from_static("myso_system"),
                 Identifier::from_static("active_validator_addresses"),
             ),
-            vec![mys_system],
+            vec![myso_system],
         );
 
         let transaction = builder.build(&mut self.client).await?;
@@ -355,12 +355,12 @@ impl SuiNetworkHandle {
 
         assert!(
             response.transaction().effects().status().success(),
-            "upgrade_mys_system_state failed"
+            "upgrade_myso_system_state failed"
         );
         Ok(())
     }
 
-    pub fn build_package(&self, package: &Path) -> Result<(mys_sdk_types::Publish, Digest)> {
+    pub fn build_package(&self, package: &Path) -> Result<(myso_sdk_types::Publish, Digest)> {
         #[derive(serde_derive::Deserialize)]
         struct MoveBuildOutput {
             modules: Vec<String>,
@@ -369,7 +369,7 @@ impl SuiNetworkHandle {
         }
         let client_config = self.dir.path().join("client.yaml");
 
-        let mut cmd = Command::new(mys_binary());
+        let mut cmd = Command::new(myso_binary());
         cmd.arg("move")
             .arg("--client.config")
             .arg(client_config)
@@ -397,7 +397,7 @@ impl SuiNetworkHandle {
         let digest = Digest::from_bytes(move_build_output.digest)?;
 
         Ok((
-            mys_sdk_types::Publish {
+            myso_sdk_types::Publish {
                 modules,
                 dependencies: move_build_output.dependencies,
             },
@@ -439,33 +439,33 @@ fn get_ephemeral_port() -> std::io::Result<u16> {
     Ok(addr.port())
 }
 
-/// Helper function for tests to skip gracefully when mys binary is not available.
+/// Helper function for tests to skip gracefully when myso binary is not available.
 /// Returns true if binary is available, false if test should be skipped.
 pub fn check_binary_available() -> bool {
-    find_mys_binary().is_some()
+    find_myso_binary().is_some()
 }
 
 #[cfg(test)]
 mod tests {
     use futures::stream::StreamExt;
-    use mys_rpc::field::FieldMask;
-    use mys_rpc::field::FieldMaskUtil;
-    use mys_rpc::proto::mys::rpc::v2::SubscribeCheckpointsRequest;
+    use myso_rpc::field::FieldMask;
+    use myso_rpc::field::FieldMaskUtil;
+    use myso_rpc::proto::myso::rpc::v2::SubscribeCheckpointsRequest;
 
     use super::*;
 
     #[tokio::test]
     async fn it_works() -> Result<(), anyhow::Error> {
-        // Skip test if mys binary is not available
+        // Skip test if myso binary is not available
         if !check_binary_available() {
-            eprintln!("Skipping integration test: mys binary not found. Set MYS_BINARY env var or install mys to run this test.");
+            eprintln!("Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test.");
             return Ok(());
         }
 
-        let mut mys = SuiNetworkBuilder::default().build().await?;
+        let mut myso = SuiNetworkBuilder::default().build().await?;
 
         // stream ~10 checkpoints to make sure things work
-        let mut stream = mys
+        let mut stream = myso
             .client
             .subscription_client()
             .subscribe_checkpoints(

@@ -15,7 +15,7 @@ anyhow = { version = "1.0.100", features = ["backtrace"] }
 futures = "0.3.31"
 serde_json = "1.0.148"
 
-mys-crypto = { path = "../mys-crypto", features = ["ed25519"] }
-mys-rpc = { path = "../mys-rpc", features = [] }
-mys-sdk-types = { path = "../mys-sdk-types", features = [] }
-mys-transaction-builder = { path = "../mys-transaction-builder", features = [] }
+myso-crypto = { path = "../myso-crypto", features = ["ed25519"] }
+myso-rpc = { path = "../myso-rpc", features = [] }
+myso-sdk-types = { path = "../myso-sdk-types", features = [] }
+myso-transaction-builder = { path = "../myso-transaction-builder", features = [] }
