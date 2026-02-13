@@ -882,7 +882,7 @@ pub mod execution_error {
         /// The modules in the package must have their self-addresses set to zero.
         PublishErrorNonZeroAddress = 10,
         /// MySo Move bytecode verification error.
-        SuiMoveVerificationError = 11,
+        MySoMoveVerificationError = 11,
         /// Error from a non-abort instruction.
         /// Possible causes:
         /// Arithmetic error, stack overflow, max value depth, or similar.
@@ -931,7 +931,7 @@ pub mod execution_error {
         /// Certificate is on the deny list.
         CertificateDenied = 30,
         /// MySo Move bytecode verification timed out.
-        SuiMoveVerificationTimedout = 31,
+        MySoMoveVerificationTimedout = 31,
         /// The requested consensus object operation is not allowed.
         ConsensusObjectOperationNotAllowed = 32,
         /// Requested consensus object has been deleted.
@@ -977,7 +977,7 @@ pub mod execution_error {
                 Self::InsufficientCoinBalance => "INSUFFICIENT_COIN_BALANCE",
                 Self::CoinBalanceOverflow => "COIN_BALANCE_OVERFLOW",
                 Self::PublishErrorNonZeroAddress => "PUBLISH_ERROR_NON_ZERO_ADDRESS",
-                Self::SuiMoveVerificationError => "SUI_MOVE_VERIFICATION_ERROR",
+                Self::MySoMoveVerificationError => "MYSO_MOVE_VERIFICATION_ERROR",
                 Self::MovePrimitiveRuntimeError => "MOVE_PRIMITIVE_RUNTIME_ERROR",
                 Self::MoveAbort => "MOVE_ABORT",
                 Self::VmVerificationOrDeserializationError => {
@@ -1005,7 +1005,7 @@ pub mod execution_error {
                 Self::PackageUpgradeError => "PACKAGE_UPGRADE_ERROR",
                 Self::WrittenObjectsTooLarge => "WRITTEN_OBJECTS_TOO_LARGE",
                 Self::CertificateDenied => "CERTIFICATE_DENIED",
-                Self::SuiMoveVerificationTimedout => "SUI_MOVE_VERIFICATION_TIMEDOUT",
+                Self::MySoMoveVerificationTimedout => "MYSO_MOVE_VERIFICATION_TIMEDOUT",
                 Self::ConsensusObjectOperationNotAllowed => {
                     "CONSENSUS_OBJECT_OPERATION_NOT_ALLOWED"
                 }
@@ -1043,7 +1043,7 @@ pub mod execution_error {
                 "PUBLISH_ERROR_NON_ZERO_ADDRESS" => {
                     Some(Self::PublishErrorNonZeroAddress)
                 }
-                "SUI_MOVE_VERIFICATION_ERROR" => Some(Self::SuiMoveVerificationError),
+                "MYSO_MOVE_VERIFICATION_ERROR" => Some(Self::MySoMoveVerificationError),
                 "MOVE_PRIMITIVE_RUNTIME_ERROR" => Some(Self::MovePrimitiveRuntimeError),
                 "MOVE_ABORT" => Some(Self::MoveAbort),
                 "VM_VERIFICATION_OR_DESERIALIZATION_ERROR" => {
@@ -1071,8 +1071,8 @@ pub mod execution_error {
                 "PACKAGE_UPGRADE_ERROR" => Some(Self::PackageUpgradeError),
                 "WRITTEN_OBJECTS_TOO_LARGE" => Some(Self::WrittenObjectsTooLarge),
                 "CERTIFICATE_DENIED" => Some(Self::CertificateDenied),
-                "SUI_MOVE_VERIFICATION_TIMEDOUT" => {
-                    Some(Self::SuiMoveVerificationTimedout)
+                "MYSO_MOVE_VERIFICATION_TIMEDOUT" => {
+                    Some(Self::MySoMoveVerificationTimedout)
                 }
                 "CONSENSUS_OBJECT_OPERATION_NOT_ALLOWED" => {
                     Some(Self::ConsensusObjectOperationNotAllowed)
