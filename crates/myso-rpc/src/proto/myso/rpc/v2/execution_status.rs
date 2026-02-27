@@ -94,7 +94,7 @@ impl From<myso_sdk_types::ExecutionError> for ExecutionError {
             E::InsufficientCoinBalance => ExecutionErrorKind::InsufficientCoinBalance,
             E::CoinBalanceOverflow => ExecutionErrorKind::CoinBalanceOverflow,
             E::PublishErrorNonZeroAddress => ExecutionErrorKind::PublishErrorNonZeroAddress,
-            E::MySoMoveVerificationError => ExecutionErrorKind::MySoMoveVerificationError,
+            E::MysoMoveVerificationError => ExecutionErrorKind::MysoMoveVerificationError,
             E::MovePrimitiveRuntimeError { location } => {
                 message.error_details = location.map(|l| {
                     ErrorDetails::Abort(MoveAbort {
@@ -185,7 +185,7 @@ impl From<myso_sdk_types::ExecutionError> for ExecutionError {
                 ExecutionErrorKind::WrittenObjectsTooLarge
             }
             E::CertificateDenied => ExecutionErrorKind::CertificateDenied,
-            E::MySoMoveVerificationTimedout => ExecutionErrorKind::MySoMoveVerificationTimedout,
+            E::MysoMoveVerificationTimedout => ExecutionErrorKind::MysoMoveVerificationTimedout,
             E::ConsensusObjectOperationNotAllowed => {
                 ExecutionErrorKind::ConsensusObjectOperationNotAllowed
             }
@@ -297,7 +297,7 @@ impl TryFrom<&ExecutionError> for myso_sdk_types::ExecutionError {
             K::InsufficientCoinBalance => Self::InsufficientCoinBalance,
             K::CoinBalanceOverflow => Self::CoinBalanceOverflow,
             K::PublishErrorNonZeroAddress => Self::PublishErrorNonZeroAddress,
-            K::MySoMoveVerificationError => Self::MySoMoveVerificationError,
+            K::MysoMoveVerificationError => Self::MysoMoveVerificationError,
             K::MovePrimitiveRuntimeError => {
                 let location = if let Some(ErrorDetails::Abort(abort)) = &value.error_details {
                     abort.location.as_ref().map(TryInto::try_into).transpose()?
@@ -425,7 +425,7 @@ impl TryFrom<&ExecutionError> for myso_sdk_types::ExecutionError {
                 }
             }
             K::CertificateDenied => Self::CertificateDenied,
-            K::MySoMoveVerificationTimedout => Self::MySoMoveVerificationTimedout,
+            K::MysoMoveVerificationTimedout => Self::MysoMoveVerificationTimedout,
             K::ConsensusObjectOperationNotAllowed => Self::ConsensusObjectOperationNotAllowed,
             K::InputObjectDeleted => Self::InputObjectDeleted,
             K::ExecutionCanceledDueToConsensusObjectCongestion => {

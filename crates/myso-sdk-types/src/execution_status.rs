@@ -168,7 +168,7 @@ pub enum ExecutionError {
     PublishErrorNonZeroAddress,
 
     /// MySo Move Bytecode Verification Error.
-    MySoMoveVerificationError,
+    MysoMoveVerificationError,
 
     //
     // MoveVm Errors
@@ -245,7 +245,7 @@ pub enum ExecutionError {
     CertificateDenied,
 
     /// MySo Move Bytecode verification timed out.
-    MySoMoveVerificationTimedout,
+    MysoMoveVerificationTimedout,
 
     /// The requested consensus object operation is not allowed
     ConsensusObjectOperationNotAllowed,
