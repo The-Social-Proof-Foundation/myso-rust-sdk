@@ -882,7 +882,7 @@ pub mod execution_error {
         /// The modules in the package must have their self-addresses set to zero.
         PublishErrorNonZeroAddress = 10,
         /// MySo Move bytecode verification error.
-        MyoMoveVerificationError = 11,
+        MysoMoveVerificationError = 11,
         /// Error from a non-abort instruction.
         /// Possible causes:
         /// Arithmetic error, stack overflow, max value depth, or similar.
