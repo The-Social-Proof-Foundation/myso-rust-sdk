@@ -80,7 +80,7 @@ pub struct BalanceChange {
     pub amount: ::core::option::Option<::prost::alloc::string::String>,
 }
 /// `Bcs` contains an arbitrary type that is serialized using the
-/// [BCS](<https://mystenlabs.github.io/myso-rust-sdk/myso_sdk_types/index.html#bcs>)
+/// [BCS](<https://the-social-proof-foundation.github.io/myso-rust-sdk/myso_sdk_types/index.html#bcs>)
 /// format as well as a name that identifies the type of the serialized value.
 #[non_exhaustive]
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
@@ -167,10 +167,10 @@ pub struct AddressAliasesVersion {
     #[prost(uint64, optional, tag = "1")]
     pub version: ::core::option::Option<u64>,
 }
-/// A header for a checkpoint on the MySo blockchain.
+/// A header for a checkpoint on the MySocial blockchain.
 ///
-/// On the MySo network, checkpoints define the history of the blockchain. They are quite similar to
-/// the concept of blocks used by other blockchains like Bitcoin or Ethereum. The MySo blockchain,
+/// On the MySocial network, checkpoints define the history of the blockchain. They are quite similar to
+/// the concept of blocks used by other blockchains like Bitcoin or Ethereum. The MySocial blockchain,
 /// however, forms checkpoints after transaction execution has already happened to provide a
 /// certified history of the chain, instead of being formed before execution.
 ///
@@ -689,7 +689,7 @@ pub struct Epoch {
     /// The committee governing this epoch.
     #[prost(message, optional, tag = "2")]
     pub committee: ::core::option::Option<ValidatorCommittee>,
-    /// Snapshot of MySo's SystemState (`0x3::myso_system::SystemState`) at the
+    /// Snapshot of MySocial's SystemState (`0x3::myso_system::SystemState`) at the
     /// beginning of the epoch, for past epochs, or the current state for the
     /// current epoch.
     #[prost(message, optional, boxed, tag = "3")]
@@ -2741,7 +2741,7 @@ pub mod ledger_service_server {
 pub struct Package {
     /// The PackageId of this package
     ///
-    /// A package's `storage_id` is the MySo ObjectId of the package on-chain.
+    /// A package's `storage_id` is the MySocial ObjectId of the package on-chain.
     /// Outside of system packages the `storage_id` for every package version is
     /// different.
     #[prost(string, optional, tag = "1")]
@@ -3824,7 +3824,7 @@ pub mod move_package_service_server {
 #[non_exhaustive]
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct LookupNameRequest {
-    /// Required. The SuiNS name to lookup.
+    /// Required. The MySoNS name to lookup.
     ///
     /// Supports both `@name` as well as `name.myso` formats.
     #[prost(string, optional, tag = "1")]
@@ -3847,7 +3847,7 @@ pub struct ReverseLookupNameRequest {
 #[non_exhaustive]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ReverseLookupNameResponse {
-    /// The record for the SuiNS name linked to the requested address
+    /// The record for the MySoNS name linked to the requested address
     #[prost(message, optional, tag = "1")]
     pub record: ::core::option::Option<NameRecord>,
 }
@@ -3860,7 +3860,7 @@ pub struct NameRecord {
     /// `Field<Domain,NameRecord>`.
     #[prost(string, optional, tag = "1")]
     pub id: ::core::option::Option<::prost::alloc::string::String>,
-    /// The SuiNS name of this record
+    /// The MySoNS name of this record
     #[prost(string, optional, tag = "2")]
     pub name: ::core::option::Option<::prost::alloc::string::String>,
     /// The ID of the `RegistrationNFT` assigned to this record.
@@ -4264,7 +4264,7 @@ pub mod name_service_server {
         const NAME: &'static str = SERVICE_NAME;
     }
 }
-/// An object on the MySo blockchain.
+/// An object on the MySocial blockchain.
 #[non_exhaustive]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Object {
@@ -4305,7 +4305,7 @@ pub struct Object {
     /// The digest of the transaction that created or last mutated this object
     #[prost(string, optional, tag = "10")]
     pub previous_transaction: ::core::option::Option<::prost::alloc::string::String>,
-    /// The amount of MYSO to rebate if this object gets deleted.
+    /// The amount of MySo to rebate if this object gets deleted.
     /// This number is re-calculated each time the object is mutated based on
     /// the present storage gas price.
     #[prost(uint64, optional, tag = "11")]
@@ -4648,7 +4648,7 @@ pub struct CircomG2 {
 /// A passkey authenticator.
 ///
 /// See
-/// [struct.PasskeyAuthenticator](<https://mystenlabs.github.io/myso-rust-sdk/myso_sdk_types/struct.PasskeyAuthenticator.html#bcs>)
+/// [struct.PasskeyAuthenticator](<https://the-social-proof-foundation.github.io/myso-rust-sdk/myso_sdk_types/struct.PasskeyAuthenticator.html#bcs>)
 /// for more information on the requirements on the shape of the
 /// `client_data_json` field.
 #[non_exhaustive]
@@ -4714,7 +4714,7 @@ pub struct ValidatorAggregatedSignature {
 ///
 /// Note: the enum values defined by this proto message exactly match their
 /// expected BCS serialized values when serialized as a u8. See
-/// [enum.SignatureScheme](<https://mystenlabs.github.io/myso-rust-sdk/myso_sdk_types/enum.SignatureScheme.html>)
+/// [enum.SignatureScheme](<https://the-social-proof-foundation.github.io/myso-rust-sdk/myso_sdk_types/enum.SignatureScheme.html>)
 /// for more information about signature schemes.
 #[non_exhaustive]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
@@ -5368,7 +5368,7 @@ pub mod regulated_coin_metadata {
 #[non_exhaustive]
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct GetBalanceRequest {
-    /// Required. The owner's MySo address.
+    /// Required. The owner's MySocial address.
     #[prost(string, optional, tag = "1")]
     pub owner: ::core::option::Option<::prost::alloc::string::String>,
     /// Required. The type names for the coin (e.g., 0x2::myso::MYSO).
@@ -5388,7 +5388,7 @@ pub struct GetBalanceResponse {
 #[non_exhaustive]
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct ListBalancesRequest {
-    /// Required. The owner's MySo address.
+    /// Required. The owner's MySocial address.
     #[prost(string, optional, tag = "1")]
     pub owner: ::core::option::Option<::prost::alloc::string::String>,
     /// The maximum number of balance entries to return. The service may return fewer than this value.
@@ -6318,7 +6318,7 @@ pub mod subscription_service_client {
         }
         /// Subscribe to the stream of checkpoints.
         ///
-        /// This API provides a subscription to the checkpoint stream for the MySo
+        /// This API provides a subscription to the checkpoint stream for the MySocial
         /// blockchain. When a subscription is initialized the stream will begin with
         /// the latest executed checkpoint as seen by the server. Responses are
         /// guaranteed to return checkpoints in-order and without gaps. This enables
@@ -6384,7 +6384,7 @@ pub mod subscription_service_server {
             + 'static;
         /// Subscribe to the stream of checkpoints.
         ///
-        /// This API provides a subscription to the checkpoint stream for the MySo
+        /// This API provides a subscription to the checkpoint stream for the MySocial
         /// blockchain. When a subscription is initialized the stream will begin with
         /// the latest executed checkpoint as seen by the server. Responses are
         /// guaranteed to return checkpoints in-order and without gaps. This enables
@@ -6694,7 +6694,7 @@ pub struct MoveTable {
 #[non_exhaustive]
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct StakeSubsidy {
-    /// Balance of MYSO set aside for stake subsidies that will be drawn down over time.
+    /// Balance of MySo set aside for stake subsidies that will be drawn down over time.
     #[prost(uint64, optional, tag = "1")]
     pub balance: ::core::option::Option<u64>,
     /// Count of the number of times stake subsidies have been distributed.
@@ -6791,7 +6791,7 @@ pub struct Validator {
     /// A unique human-readable name of this validator.
     #[prost(string, optional, tag = "1")]
     pub name: ::core::option::Option<::prost::alloc::string::String>,
-    /// The MySo Address of the validator. This is the sender that created the Validator object,
+    /// The MySocial Address of the validator. This is the sender that created the Validator object,
     /// and also the address to send validator/coins to during withdraws.
     #[prost(string, optional, tag = "2")]
     pub address: ::core::option::Option<::prost::alloc::string::String>,
@@ -6896,8 +6896,8 @@ pub struct StakingPool {
     /// `Some(<epoch_number>)` if in-active, and it was de-activated at epoch `<epoch_number>`.
     #[prost(uint64, optional, tag = "3")]
     pub deactivation_epoch: ::core::option::Option<u64>,
-    /// The total number of MYSO tokens in this pool, including the MYSO in the rewards_pool, as well as in all the principal
-    /// in the `StakedSui` object, updated at epoch boundaries.
+    /// The total number of MySo tokens in this pool, including the MySo in the rewards_pool, as well as in all the principal
+    /// in the `StakedMySocial` object, updated at epoch boundaries.
     #[prost(uint64, optional, tag = "4")]
     pub myso_balance: ::core::option::Option<u64>,
     /// The epoch stake rewards will be added here at the end of each epoch.
@@ -6918,7 +6918,7 @@ pub struct StakingPool {
     #[prost(uint64, optional, tag = "8")]
     pub pending_stake: ::core::option::Option<u64>,
     /// Pending stake withdrawn during the current epoch, emptied at epoch boundaries.
-    /// This includes both the principal and rewards MYSO withdrawn.
+    /// This includes both the principal and rewards MySo withdrawn.
     #[prost(uint64, optional, tag = "9")]
     pub pending_total_myso_withdraw: ::core::option::Option<u64>,
     /// Pending pool token withdrawn during the current epoch, emptied at epoch boundaries.

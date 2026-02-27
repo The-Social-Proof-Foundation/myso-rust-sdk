@@ -295,7 +295,7 @@ message ListOwnedObjectsRequest {
   // `Coin<T>` objects regardless of the type parameter `T`. Providing a type
   // with a type param will restrict the returned objects to only those objects
   // that match the provided type parameters, e.g.
-  // `0x2::coin::Coin<0x2::myso::MYSO>` will only return `Coin<MySo>` objects.
+  // `0x2::coin::Coin<0x2::myso::MYSO>` will only return `Coin<MYSO>` objects.
   optional string object_type = 5;
 }
 
