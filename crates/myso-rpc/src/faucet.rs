@@ -23,7 +23,7 @@ pub struct FaucetClient {
 
 impl FaucetClient {
     /// URL for the testnet faucet.
-    pub const TESTNET: &str = "https://faucet.testnet.mysocial.network";
+    pub const TESTNET: &str = "https://faucet.mysocial.network";
     /// URL for the devnet faucet.
     pub const DEVNET: &str = "https://faucet.devnet.mysocial.network";
     /// URL for the local faucet.
