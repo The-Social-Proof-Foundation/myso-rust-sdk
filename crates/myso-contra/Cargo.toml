@@ -1,0 +1,24 @@
+[package]
+name = "myso-contra"
+version = "0.1.0"
+edition = "2024"
+authors = ["Brandon Shaw <brandon@mysocial.network>"]
+license = "Apache-2.0"
+description = "Contra confidential transfers client for the MySo Rust SDK"
+publish = false
+
+[dependencies]
+bcs = "0.1.6"
+myso-contra-crypto = { path = "../myso-contra-crypto" }
+myso-sdk-types = { path = "../myso-sdk-types", features = ["serde"] }
+myso-transaction-builder = { path = "../myso-transaction-builder" }
+thiserror = "2.0"
+
+[dev-dependencies]
+hex = "0.4"
+myso-contra = { path = "../myso-contra" }
+rand = { version = "0.8", features = ["std_rng"] }
+
+[[test]]
+name = "parity"
+path = "tests/parity.rs"
