@@ -3,9 +3,13 @@
 
 //! Proof generation primitives for the Contra confidential transfers protocol.
 
+pub mod amount;
 pub mod bulletproofs;
+pub mod elgamal;
 pub mod fixtures;
+pub mod group;
 pub mod nizk;
+pub mod proofs;
 pub mod types;
 pub mod well_formed;
 

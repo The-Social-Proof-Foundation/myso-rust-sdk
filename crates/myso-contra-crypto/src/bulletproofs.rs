@@ -63,6 +63,45 @@ pub fn batch_range_proof_wire(
     proof.to_bytes()
 }
 
+/// Range proof whose commitments are Contra ciphertexts: value on H, blinding on G.
+pub fn batch_range_proof_contra(
+    values: &[u64],
+    blindings: &[Scalar],
+    bit_size: u32,
+    dst: &[u8],
+    rng: &mut (impl rand::RngCore + rand::CryptoRng),
+) -> Vec<u8> {
+    assert_eq!(values.len(), blindings.len());
+    assert!(values.len().is_power_of_two());
+    let bits = bits_for_range(bit_size);
+    let bp_gens = BulletproofGens::new(bits, values.len());
+    let pc_gens = contra_pedersen_gens();
+    let dst_label = leak_dst(dst);
+    let mut prover_transcript = Transcript::new(dst_label);
+    let (proof, commitments) = ExternalRangeProof::prove_multiple_with_rng(
+        &bp_gens,
+        &pc_gens,
+        &mut prover_transcript,
+        values,
+        blindings,
+        bits,
+        rng,
+    )
+    .expect("contra range proof");
+    for (commitment, (value, blinding)) in commitments.iter().zip(values.iter().zip(blindings)) {
+        let expected = pc_gens.commit(Scalar::from(*value), *blinding).compress();
+        assert_eq!(commitment, &expected);
+    }
+    proof.to_bytes()
+}
+
+fn contra_pedersen_gens() -> PedersenGens {
+    PedersenGens {
+        B: crate::group::h(),
+        B_blinding: curve25519_dalek::constants::RISTRETTO_BASEPOINT_POINT,
+    }
+}
+
 pub fn pedersen_commitment_bytes(value: u64, blinding: u64) -> [u8; 32] {
     let pc_gens = PedersenGens::default();
     pc_gens

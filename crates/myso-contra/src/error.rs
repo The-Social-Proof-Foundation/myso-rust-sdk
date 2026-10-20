@@ -7,4 +7,6 @@ use thiserror::Error;
 pub enum ContraError {
     #[error("invalid argument: {0}")]
     InvalidArgument(String),
+    #[error("{0}")]
+    Failed(String),
 }

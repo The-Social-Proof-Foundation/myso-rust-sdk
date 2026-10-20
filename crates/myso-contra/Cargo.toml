@@ -12,7 +12,11 @@ bcs = "0.1.6"
 myso-contra-crypto = { path = "../myso-contra-crypto" }
 myso-sdk-types = { path = "../myso-sdk-types", features = ["serde"] }
 myso-transaction-builder = { path = "../myso-transaction-builder" }
+serde_json = "1"
 thiserror = "2.0"
+
+[dependencies.hex]
+version = "0.4"
 
 [dev-dependencies]
 hex = "0.4"
