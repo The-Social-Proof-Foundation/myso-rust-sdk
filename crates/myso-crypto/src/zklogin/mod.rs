@@ -36,6 +36,12 @@ impl ZkloginVerifier {
         Self::new(verify::VerifyingKey::new_dev())
     }
 
+    /// Verifier for MySo networks, whose validators use MySo's own Groth16 key rather than the
+    /// upstream mainnet key.
+    pub fn new_myso() -> Self {
+        Self::new(verify::VerifyingKey::new_myso())
+    }
+
     pub fn jwks(&self) -> &HashMap<JwkId, Jwk> {
         &self.jwks
     }

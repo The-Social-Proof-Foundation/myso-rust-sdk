@@ -35,7 +35,8 @@ pub fn token_account_object_id(
     let account_key = TypeTag::from_str(&format!("{}::contra::AccountKey", package)).map_err(|error| ContraError::InvalidArgument(error.to_string()))?;
     let account = registry.derive_object_id(&account_key, &bcs::to_bytes(&owner).expect("address"));
     let field_key = TypeTag::Struct(Box::new(struct_tag(&package, "TokenAccountKey", Some(&token))));
-    Ok(account.derive_dynamic_child_id(&field_key, &[]).to_string())
+    // Same name bytes as web `bcs.byteVector().serialize([])` → `[0]`, not a raw empty slice.
+    Ok(account.derive_dynamic_child_id(&field_key, &empty_vec_name()).to_string())
 }
 
 pub fn account_public_key_hex(token_account_json: &str) -> Result<String, ContraError> {
@@ -93,11 +94,12 @@ fn ids(request: &Value) -> Result<Ids, ContraError> {
     let account_key = TypeTag::from_str(&format!("{package_text}::contra::AccountKey")).map_err(|e| ContraError::InvalidArgument(e.to_string()))?;
     let account = registry.derive_object_id(&account_key, &bcs::to_bytes(&owner).expect("address"));
     let token_key = TypeTag::Struct(Box::new(struct_tag(&package, "TokenKey", Some(&token_type))));
-    let token = token_registry.derive_object_id(&token_key, &[]);
+    let name = empty_vec_name();
+    let token = token_registry.derive_object_id(&token_key, &name);
     let pool_key = TypeTag::from_str(&format!("{package_text}::contra::PoolKey")).map_err(|e| ContraError::InvalidArgument(e.to_string()))?;
-    let pool = token.derive_object_id(&pool_key, &[]);
+    let pool = token.derive_object_id(&pool_key, &name);
     let token_account_key = TypeTag::Struct(Box::new(struct_tag(&package, "TokenAccountKey", Some(&token_type))));
-    let unique = account.derive_object_id(&token_account_key, &[]);
+    let unique = account.derive_object_id(&token_account_key, &name);
     let mut session_id = [0u8; 20];
     session_id.copy_from_slice(&unique.as_bytes()[..20]);
     Ok(Ids {
@@ -721,6 +723,11 @@ fn address(text: &str) -> Result<Address, ContraError> {
     Address::from_str(text).map_err(|e| ContraError::InvalidArgument(e.to_string()))
 }
 
+/// BCS `vector<u8>` with length 0 → `[0]`. Matches TS `bcs.byteVector().serialize([])`.
+fn empty_vec_name() -> Vec<u8> {
+    bcs::to_bytes(&Vec::<u8>::new()).expect("empty vec BCS")
+}
+
 fn receiver_account_id(request: &Value, receiver: &str) -> Result<String, ContraError> {
     let package = address(required_str(request, "packageId")?)?;
     let registry = address(required_str(request, "accountRegistryId")?)?;
@@ -749,5 +756,74 @@ mod tests {
         let plan = plan_transaction(request).unwrap();
         assert!(plan.contains("contra::wrap"));
         assert!(!plan.contains("accountKey"));
+    }
+
+    #[test]
+    fn empty_vec_name_is_bcs_zero_length() {
+        assert_eq!(empty_vec_name(), vec![0u8]);
+    }
+
+    /// Live testnet MYUSD ConfidentialToken — must match web `getConfidentialTokenId`.
+    #[test]
+    fn confidential_token_id_matches_web_myusd() {
+        let package = address("0xc1fe").unwrap();
+        let token_registry = address("0xf99d63752b6144d0a786fc7d4894b751bdefac90d61417175d0f27bc35669b0d").unwrap();
+        let token_type = StructTag::from_str(
+            "0xf862bc40fe05aa0b6779ff7894f0c46a6bed19d179f68116119b9d222a32fb19::myusd::MYUSD",
+        )
+        .unwrap();
+        let token_key = TypeTag::Struct(Box::new(struct_tag(&package, "TokenKey", Some(&token_type))));
+        let token = token_registry.derive_object_id(&token_key, &empty_vec_name());
+        assert_eq!(
+            token.to_string(),
+            "0x3fdc6625e234d16a8eb285946ca335220034e0fcdb408929aa4f9e42729a778f"
+        );
+    }
+
+    #[test]
+    fn create_plan_references_live_myusd_confidential_token() {
+        let request = r#"{
+            "action":"create",
+            "packageId":"0xc1fe",
+            "accountRegistryId":"0xbb7ee5a9204a880c4b5e938dbbb188acc14d405a99e1aa663b03c34414901d40",
+            "tokenRegistryId":"0xf99d63752b6144d0a786fc7d4894b751bdefac90d61417175d0f27bc35669b0d",
+            "owner":"0x6b27c51107b378c9a1c6f1b471e43407d3027e8485464b0f7e9be8d196cbd8e0",
+            "tokenType":"0xf862bc40fe05aa0b6779ff7894f0c46a6bed19d179f68116119b9d222a32fb19::myusd::MYUSD",
+            "accountKey":"a97a3850c6ebc903140b0658922fc72de2e314bd7acd402ce46fa9bcf3d8bd00",
+            "hasAccount":false,
+            "auditorKeys":[]
+        }"#;
+        let plan = plan_transaction(request).unwrap();
+        assert!(
+            plan.contains("0x3fdc6625e234d16a8eb285946ca335220034e0fcdb408929aa4f9e42729a778f"),
+            "plan should reference live ConfidentialToken, got: {plan}"
+        );
+        assert!(
+            !plan.contains("0x68a361d25c27f3899dcd8eba2a5288c991c5434120606792563e7b609173a20a"),
+            "plan must not use the old empty-slice derived id"
+        );
+    }
+}
+
+#[cfg(test)]
+mod decrypt_json_tests {
+    use super::*;
+    use myso_contra_crypto::group::{identity, point_bytes};
+
+    #[test]
+    fn decrypts_trivial_zero_from_number_array_json() {
+        let id = point_bytes(&identity());
+        let bytes_json = format!("[{}]", id.iter().map(|b| b.to_string()).collect::<Vec<_>>().join(","));
+        let limb = format!(
+            r#"{{"ciphertext":{{"bytes":{bytes_json}}},"decryption_handle":{{"bytes":{bytes_json}}}}}"#
+        );
+        let amount = format!(r#"{{"l0":{limb},"l1":{limb},"l2":{limb},"l3":{limb}}}"#);
+        let account = format!(
+            r#"{{"pk":{{"bytes":{bytes_json}}},"active":{{"amount":{amount},"upper_bound":1}},"pending":{{"amount":{amount},"upper_bound":1}},"public_balance":{{"value":"0"}}}}"#
+        );
+        let mut key = [1u8; 32];
+        key[31] = 0;
+        let (a, p, pp) = decrypt_balance(&key, &account).unwrap();
+        assert_eq!((a, p, pp), (0, 0, 0));
     }
 }

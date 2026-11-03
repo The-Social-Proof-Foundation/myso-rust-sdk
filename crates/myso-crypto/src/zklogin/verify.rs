@@ -231,6 +231,79 @@ fn dev_verifying_key() -> VerifyingKey {
     VerifyingKey::new(PreparedVerifyingKey::from(vk))
 }
 
+/// MySo networks' Groth16 key, exported from the MySo prover's `zklogin_myso_final.zkey`
+/// (`zklogin_myso_final.vkey.json`). MySo validators verify zkLogin proofs with this key.
+fn myso_verifying_key() -> VerifyingKey {
+    const CIRCOM_ALPHA_G1: CircomG1 = build_circom_g1([
+        "3346888333150243648794709355723927761822459065892476056335505716600878323800",
+        "926404397237202258729328753413409207591164686257092918506957816922888792593",
+        "1",
+    ]);
+
+    const CIRCOM_BETA_G2: CircomG2 = build_circom_g2([
+        [
+            "1866796510416044182583074575766191584542136313823384187856088149569251657121",
+            "14849186626802286331092753395559856412612056636862613413297590286335882845735",
+        ],
+        [
+            "19203936420100973874064314145065911977106666858128015525962891664550595143840",
+            "5147404592994159780651093049009296871599872893985494869445938149464436272246",
+        ],
+        ["1", "0"],
+    ]);
+
+    const CIRCOM_GAMMA_G2: CircomG2 = build_circom_g2([
+        [
+            "10857046999023057135944570762232829481370756359578518086990519993285655852781",
+            "11559732032986387107991004021392285783925812861821192530917403151452391805634",
+        ],
+        [
+            "8495653923123431417604973247489272438418190587263600148770280649306958101930",
+            "4082367875863433681332203403145435568316851327593401208105741076214120093531",
+        ],
+        ["1", "0"],
+    ]);
+
+    const CIRCOM_DELTA_G2: CircomG2 = build_circom_g2([
+        [
+            "11568366791698561411959961069846140669071496353149410895999403133638837328828",
+            "13045764249579535758274181268046559048611668430491321682297467536499039573145",
+        ],
+        [
+            "15527005087329778594736483861659441471853403532140228661051684991286277389909",
+            "14945687200013166884100232197350390720440565986376001817771584965981944134516",
+        ],
+        ["1", "0"],
+    ]);
+
+    const CIRCOM_GAMMA_ABC_G1: [CircomG1; 2] = [
+        build_circom_g1([
+            "10327184479025842451900543539668898132565150459385995228028798618925733557038",
+            "7688964321762564052753936086976901302946872046684591216468921447625982862017",
+            "1",
+        ]),
+        build_circom_g1([
+            "5699527247483006143456523545338490371347205151559905418331515262789849197044",
+            "16354967625174179652964140491915861688575143862377984324660589620237734715313",
+            "1",
+        ]),
+    ];
+
+    let vk = ark_groth16::VerifyingKey {
+        alpha_g1: circom_to_arkworks_g1(&CIRCOM_ALPHA_G1).unwrap(),
+        beta_g2: circom_to_arkworks_g2(&CIRCOM_BETA_G2).unwrap(),
+        gamma_g2: circom_to_arkworks_g2(&CIRCOM_GAMMA_G2).unwrap(),
+        delta_g2: circom_to_arkworks_g2(&CIRCOM_DELTA_G2).unwrap(),
+        gamma_abc_g1: CIRCOM_GAMMA_ABC_G1
+            .iter()
+            .map(circom_to_arkworks_g1)
+            .collect::<Result<_, _>>()
+            .unwrap(),
+    };
+
+    VerifyingKey::new(PreparedVerifyingKey::from(vk))
+}
+
 impl VerifyingKey {
     fn new(inner: PreparedVerifyingKey<ark_bn254::Bn254>) -> Self {
         Self { inner }
@@ -242,6 +315,10 @@ impl VerifyingKey {
 
     pub fn new_dev() -> Self {
         dev_verifying_key()
+    }
+
+    pub fn new_myso() -> Self {
+        myso_verifying_key()
     }
 
     pub fn verify_zklogin(
