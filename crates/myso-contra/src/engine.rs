@@ -417,9 +417,11 @@ fn plan_transfer(request: &Value) -> Result<Value, ContraError> {
     let amounts_type = format!("{}::encrypted_amount::EncryptedAmount", ids.package);
     let receiver_amounts = plan.vector(&amounts_type, vec![result(receiver_amount)]);
     let sender_amounts = plan.vector(&amounts_type, vec![result(sender_amount)]);
-    let mut batch_limbs = receiver_limbs.to_vec();
-    batch_limbs.extend(new_balance.iter().cloned());
-    let proof = well_formed_call(&mut plan, &ids, &[batch_limbs])?;
+    let proof = well_formed_call(
+        &mut plan,
+        &ids,
+        &[receiver_limbs.to_vec(), new_balance.to_vec()],
+    )?;
     let pks = plan.call(
         &format!("{}::decode::g_vector", ids.package),
         vec![],
@@ -458,7 +460,12 @@ fn plan_transfer(request: &Value) -> Result<Value, ContraError> {
     let added = plan.call(
         &format!("{}::contra::add_to_batch", ids.package),
         vec![ids.token_type.clone()],
-        vec![result(batch), object(&receiver_account), pure_bytes(&[])],
+        vec![
+            result(batch),
+            object(&receiver_account),
+            pure_bytes(&[]),
+            object(DENY_LIST),
+        ],
         1,
     );
     plan.call(
