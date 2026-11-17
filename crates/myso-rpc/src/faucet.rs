@@ -1,9 +1,9 @@
+use myso_sdk_types::Address;
+use myso_sdk_types::Digest;
 use reqwest::StatusCode;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::json;
-use myso_sdk_types::Address;
-use myso_sdk_types::Digest;
 
 type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 

@@ -1,14 +1,14 @@
 use crate::SignatureError;
-use p256::ecdsa::SigningKey;
-use p256::ecdsa::VerifyingKey;
-use p256::elliptic_curve::group::GroupEncoding;
-use signature::Signer;
-use signature::Verifier;
 use myso_sdk_types::Secp256r1PublicKey;
 use myso_sdk_types::Secp256r1Signature;
 use myso_sdk_types::SignatureScheme;
 use myso_sdk_types::SimpleSignature;
 use myso_sdk_types::UserSignature;
+use p256::ecdsa::SigningKey;
+use p256::ecdsa::VerifyingKey;
+use p256::elliptic_curve::group::GroupEncoding;
+use signature::Signer;
+use signature::Verifier;
 
 #[derive(Clone)]
 pub struct Secp256r1PrivateKey(SigningKey);

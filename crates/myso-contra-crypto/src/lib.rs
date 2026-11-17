@@ -17,4 +17,4 @@ pub use bulletproofs::{
     assert_wire_proof_valid, batch_range_proof_wire, pedersen_commitment_bytes, range_from_bits,
 };
 pub use fixtures::{SINGLE_AMOUNT_DST, TWO_AMOUNT_DST, WRONG_DST};
-pub use types::{ProtocolId, PROTOCOL_DDH, PROTOCOL_ELGAMAL, PROTOCOL_KEY_CONSISTENCY};
+pub use types::{PROTOCOL_DDH, PROTOCOL_ELGAMAL, PROTOCOL_KEY_CONSISTENCY, ProtocolId};

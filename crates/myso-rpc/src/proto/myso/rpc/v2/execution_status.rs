@@ -693,8 +693,8 @@ impl TryFrom<type_argument_error::TypeArgumentErrorKind> for myso_sdk_types::Typ
 
 impl From<myso_sdk_types::PackageUpgradeError> for PackageUpgradeError {
     fn from(value: myso_sdk_types::PackageUpgradeError) -> Self {
-        use package_upgrade_error::PackageUpgradeErrorKind;
         use myso_sdk_types::PackageUpgradeError as E;
+        use package_upgrade_error::PackageUpgradeErrorKind;
 
         let mut message = Self::default();
 

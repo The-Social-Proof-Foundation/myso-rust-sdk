@@ -1,7 +1,7 @@
 use crate::SignatureError;
-use signature::Verifier;
 use myso_sdk_types::SimpleSignature;
 use myso_sdk_types::UserSignature;
+use signature::Verifier;
 
 pub struct SimpleVerifier;
 
@@ -75,12 +75,12 @@ pub use keypair::{SimpleKeypair, SimpleVerifiyingKey};
 )]
 mod keypair {
     use crate::SignatureError;
-    use signature::Signer;
-    use signature::Verifier;
     use myso_sdk_types::MultisigMemberPublicKey;
     use myso_sdk_types::SignatureScheme;
     use myso_sdk_types::SimpleSignature;
     use myso_sdk_types::UserSignature;
+    use signature::Signer;
+    use signature::Verifier;
 
     #[derive(Debug, Clone)]
     pub struct SimpleKeypair {

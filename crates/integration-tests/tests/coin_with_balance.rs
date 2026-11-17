@@ -14,7 +14,9 @@ use myso_transaction_builder::intent::CoinWithBalance;
 #[tokio::test]
 async fn large_number_of_requests() -> Result<()> {
     if !integration_tests::check_binary_available() {
-        eprintln!("Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test.");
+        eprintln!(
+            "Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test."
+        );
         return Ok(());
     }
     let mut myso = MySoNetworkBuilder::default().build().await?;
@@ -53,7 +55,9 @@ async fn large_number_of_requests() -> Result<()> {
 #[tokio::test]
 async fn zero_value_requests() -> Result<()> {
     if !integration_tests::check_binary_available() {
-        eprintln!("Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test.");
+        eprintln!(
+            "Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test."
+        );
         return Ok(());
     }
     let mut myso = MySoNetworkBuilder::default().build().await?;

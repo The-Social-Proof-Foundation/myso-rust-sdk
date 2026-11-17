@@ -1,6 +1,5 @@
 use anyhow::Result;
 use integration_tests::MySoNetworkBuilder;
-use std::str::FromStr;
 use myso_crypto::MySoSigner;
 use myso_rpc::field::FieldMask;
 use myso_rpc::field::FieldMaskUtil;
@@ -12,11 +11,14 @@ use myso_sdk_types::TypeTag;
 use myso_transaction_builder::Function;
 use myso_transaction_builder::ObjectInput;
 use myso_transaction_builder::TransactionBuilder;
+use std::str::FromStr;
 
 #[tokio::test]
 async fn test_move_call() -> Result<()> {
     if !integration_tests::check_binary_available() {
-        eprintln!("Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test.");
+        eprintln!(
+            "Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test."
+        );
         return Ok(());
     }
     let mut myso = MySoNetworkBuilder::default().build().await?;
@@ -167,7 +169,9 @@ async fn test_move_call() -> Result<()> {
 #[tokio::test]
 async fn test_publish() {
     if !integration_tests::check_binary_available() {
-        eprintln!("Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test.");
+        eprintln!(
+            "Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test."
+        );
         return;
     }
     let mut myso = MySoNetworkBuilder::default().build().await.unwrap();
@@ -204,7 +208,9 @@ async fn test_publish() {
 #[tokio::test]
 async fn test_upgrade() -> Result<()> {
     if !integration_tests::check_binary_available() {
-        eprintln!("Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test.");
+        eprintln!(
+            "Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test."
+        );
         return Ok(());
     }
     let mut myso = MySoNetworkBuilder::default().build().await.unwrap();

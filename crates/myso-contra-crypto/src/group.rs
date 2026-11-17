@@ -8,8 +8,8 @@ use curve25519_dalek::ristretto::CompressedRistretto;
 
 pub use curve25519_dalek::ristretto::RistrettoPoint;
 pub use curve25519_dalek::scalar::Scalar;
-use rand::rngs::OsRng;
 use rand::RngCore;
+use rand::rngs::OsRng;
 
 /// On-chain `h()`, `hash_to_curve("fastcrypto-blinding-gen-01")`.
 pub const H_BYTES: [u8; 32] = [

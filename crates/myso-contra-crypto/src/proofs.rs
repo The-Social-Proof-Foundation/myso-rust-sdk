@@ -92,7 +92,13 @@ pub struct ElGamalProof {
 }
 
 impl ElGamalProof {
-    pub fn prove(dst: &[u8], blinding: &Scalar, amount: u64, encryption: &Ciphertext, pk: &RistrettoPoint) -> Self {
+    pub fn prove(
+        dst: &[u8],
+        blinding: &Scalar,
+        amount: u64,
+        encryption: &Ciphertext,
+        pk: &RistrettoPoint,
+    ) -> Self {
         let r1 = random_scalar();
         let r2 = random_scalar();
         let a = mul(pk, &r1);
@@ -157,7 +163,9 @@ pub fn scalar_to_u32_limbs(scalar: &Scalar) -> [u64; 8] {
     let mut limbs = [0u64; 8];
     for (index, limb) in limbs.iter_mut().enumerate() {
         let start = index * 4;
-        *limb = u64::from(u32::from_le_bytes(bytes[start..start + 4].try_into().unwrap()));
+        *limb = u64::from(u32::from_le_bytes(
+            bytes[start..start + 4].try_into().unwrap(),
+        ));
     }
     limbs
 }
@@ -236,8 +244,20 @@ fn challenge_key(
     fiat_shamir_challenge(&refs)
 }
 
-pub fn prove_is_zero(dst: &[u8], secret: &Scalar, pk: &RistrettoPoint, ciphertext: &Ciphertext) -> DdhProof {
-    DdhProof::prove(dst, secret, &g(), &ciphertext.ciphertext, pk, &ciphertext.decryption_handle)
+pub fn prove_is_zero(
+    dst: &[u8],
+    secret: &Scalar,
+    pk: &RistrettoPoint,
+    ciphertext: &Ciphertext,
+) -> DdhProof {
+    DdhProof::prove(
+        dst,
+        secret,
+        &g(),
+        &ciphertext.ciphertext,
+        pk,
+        &ciphertext.decryption_handle,
+    )
 }
 
 #[cfg(test)]

@@ -1,9 +1,9 @@
 use crate::SignatureError;
 use crate::secp256r1::Secp256r1VerifyingKey;
-use signature::Verifier;
 use myso_sdk_types::PasskeyAuthenticator;
 use myso_sdk_types::SimpleSignature;
 use myso_sdk_types::UserSignature;
+use signature::Verifier;
 
 #[derive(Default, Clone, Debug)]
 pub struct PasskeyVerifier {}

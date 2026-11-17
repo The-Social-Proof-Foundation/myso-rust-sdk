@@ -47,7 +47,10 @@ pub fn batch_range_proof_wire(
     let dst_label = leak_dst(dst);
     let mut prover_transcript = Transcript::new(dst_label);
 
-    let blindings: Vec<Scalar> = blindings.iter().map(|&b| dalek_scalar_from_u64(b)).collect();
+    let blindings: Vec<Scalar> = blindings
+        .iter()
+        .map(|&b| dalek_scalar_from_u64(b))
+        .collect();
 
     let (proof, _) = ExternalRangeProof::prove_multiple_with_rng(
         &bp_gens,
@@ -105,7 +108,10 @@ fn contra_pedersen_gens() -> PedersenGens {
 pub fn pedersen_commitment_bytes(value: u64, blinding: u64) -> [u8; 32] {
     let pc_gens = PedersenGens::default();
     pc_gens
-        .commit(dalek_scalar_from_u64(value), dalek_scalar_from_u64(blinding))
+        .commit(
+            dalek_scalar_from_u64(value),
+            dalek_scalar_from_u64(blinding),
+        )
         .compress()
         .to_bytes()
 }
@@ -132,15 +138,17 @@ pub fn assert_wire_proof_valid(
                 .compress()
         })
         .collect();
-    assert!(external
-        .verify_multiple(
-            &bp_gens,
-            &pc_gens,
-            &mut verifier_transcript,
-            &compressed,
-            bits,
-        )
-        .is_ok());
+    assert!(
+        external
+            .verify_multiple(
+                &bp_gens,
+                &pc_gens,
+                &mut verifier_transcript,
+                &compressed,
+                bits,
+            )
+            .is_ok()
+    );
 }
 
 #[cfg(test)]

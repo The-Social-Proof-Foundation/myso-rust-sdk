@@ -1,5 +1,5 @@
-use prost_types::FieldMask;
 use myso_sdk_types::Address;
+use prost_types::FieldMask;
 
 use crate::field::FieldMaskUtil;
 use crate::proto::myso::rpc::v2::Argument;
@@ -44,7 +44,10 @@ struct StakedMySo {
 }
 
 impl Client {
-    pub async fn get_delegated_stake(&mut self, staked_myso_id: &Address) -> Result<DelegatedStake> {
+    pub async fn get_delegated_stake(
+        &mut self,
+        staked_myso_id: &Address,
+    ) -> Result<DelegatedStake> {
         let maybe_staked_myso = self
             .ledger_client()
             .get_object(

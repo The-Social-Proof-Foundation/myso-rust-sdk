@@ -1,11 +1,6 @@
 use anyhow::Result;
 use anyhow::anyhow;
 use anyhow::bail;
-use std::collections::BTreeMap;
-use std::path::Path;
-use std::path::PathBuf;
-use std::process::Child;
-use std::process::Command;
 use myso_crypto::MySoSigner;
 use myso_crypto::ed25519::Ed25519PrivateKey;
 use myso_rpc::Client;
@@ -20,6 +15,11 @@ use myso_transaction_builder::Function;
 use myso_transaction_builder::ObjectInput;
 use myso_transaction_builder::TransactionBuilder;
 use myso_transaction_builder::intent::CoinWithBalance;
+use std::collections::BTreeMap;
+use std::path::Path;
+use std::path::PathBuf;
+use std::process::Child;
+use std::process::Command;
 use tempfile::TempDir;
 use tokio::time::Duration;
 use tokio::time::sleep;
@@ -458,7 +458,9 @@ mod tests {
     async fn it_works() -> Result<(), anyhow::Error> {
         // Skip test if myso binary is not available
         if !check_binary_available() {
-            eprintln!("Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test.");
+            eprintln!(
+                "Skipping integration test: myso binary not found. Set MYSO_BINARY env var or install myso to run this test."
+            );
             return Ok(());
         }
 

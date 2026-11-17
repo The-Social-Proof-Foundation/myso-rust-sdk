@@ -22,9 +22,11 @@ impl EncryptedAmount {
     }
 
     pub fn collapse(self) -> Ciphertext {
-        self.limbs[0]
-            .add(self.limbs[1].shift_left(16))
-            .add(self.limbs[2].shift_left(32).add(self.limbs[3].shift_left(48)))
+        self.limbs[0].add(self.limbs[1].shift_left(16)).add(
+            self.limbs[2]
+                .shift_left(32)
+                .add(self.limbs[3].shift_left(48)),
+        )
     }
 
     pub fn decrypt(&self, secret_inverse: &Scalar) -> Result<u64, String> {
@@ -54,11 +56,7 @@ pub struct WellFormedLimb {
     pub proof: ElGamalProof,
 }
 
-pub fn encrypt_limb(
-    dst: &[u8],
-    pk: &RistrettoPoint,
-    value: u64,
-) -> WellFormedLimb {
+pub fn encrypt_limb(dst: &[u8], pk: &RistrettoPoint, value: u64) -> WellFormedLimb {
     let blinding = crate::group::random_scalar();
     let ciphertext = Ciphertext::encrypt(pk, value, &blinding);
     let proof = ElGamalProof::prove(dst, &blinding, value, &ciphertext, pk);
@@ -103,6 +101,9 @@ mod tests {
                 amount[3].ciphertext,
             ],
         };
-        assert_eq!(encrypted.decrypt(&secret.invert()).unwrap(), 0x0001_0002_0003_0004);
+        assert_eq!(
+            encrypted.decrypt(&secret.invert()).unwrap(),
+            0x0001_0002_0003_0004
+        );
     }
 }

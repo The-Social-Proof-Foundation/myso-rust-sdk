@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
 use crate::SignatureError;
-use poseidon::POSEIDON;
-use signature::Verifier;
 use myso_sdk_types::Jwk;
 use myso_sdk_types::JwkId;
 use myso_sdk_types::UserSignature;
 use myso_sdk_types::ZkLoginAuthenticator;
+use poseidon::POSEIDON;
+use signature::Verifier;
 
 mod poseidon;
 mod verify;

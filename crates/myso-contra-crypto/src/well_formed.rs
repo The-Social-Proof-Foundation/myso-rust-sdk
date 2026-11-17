@@ -71,12 +71,22 @@ pub fn build_contra_range_proofs(
         vec![limbs.len()]
     };
     for chunk in chunk_count {
-        let start = if limbs.len() % 4 == 0 { offset * 4 } else { offset };
-        let width = if limbs.len() % 4 == 0 { chunk * 4 } else { chunk };
+        let start = if limbs.len() % 4 == 0 {
+            offset * 4
+        } else {
+            offset
+        };
+        let width = if limbs.len() % 4 == 0 {
+            chunk * 4
+        } else {
+            chunk
+        };
         let slice = &limbs[start..start + width];
         let values: Vec<u64> = slice.iter().map(|(value, _)| *value).collect();
         let blindings: Vec<Scalar> = slice.iter().map(|(_, blinding)| *blinding).collect();
-        proofs.push(batch_range_proof_contra(&values, &blindings, bit_size, dst, rng));
+        proofs.push(batch_range_proof_contra(
+            &values, &blindings, bit_size, dst, rng,
+        ));
         offset += chunk;
     }
     proofs

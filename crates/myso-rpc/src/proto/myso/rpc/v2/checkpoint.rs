@@ -550,7 +550,11 @@ impl Merge<&myso_sdk_types::CheckpointSummary> for Checkpoint {
 }
 
 impl Merge<myso_sdk_types::ValidatorAggregatedSignature> for Checkpoint {
-    fn merge(&mut self, source: myso_sdk_types::ValidatorAggregatedSignature, mask: &FieldMaskTree) {
+    fn merge(
+        &mut self,
+        source: myso_sdk_types::ValidatorAggregatedSignature,
+        mask: &FieldMaskTree,
+    ) {
         if mask.contains(Self::SIGNATURE_FIELD.name) {
             self.signature = Some(source.into());
         }

@@ -8,10 +8,10 @@ use crate::intent::Intent;
 use crate::intent::IntentResolver;
 use crate::intent::MAX_ARGUMENTS;
 use crate::intent::MAX_GAS_OBJECTS;
-use std::collections::BTreeMap;
 use myso_sdk_types::Address;
 use myso_sdk_types::Identifier;
 use myso_sdk_types::StructTag;
+use std::collections::BTreeMap;
 
 pub struct CoinWithBalance {
     coin_type: StructTag,

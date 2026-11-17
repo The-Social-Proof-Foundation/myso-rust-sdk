@@ -1,6 +1,6 @@
-use signature::Signer;
 use myso_sdk_types::PersonalMessage;
 use myso_sdk_types::ZkLoginInputs;
+use signature::Signer;
 
 use crate::MySoVerifier;
 use crate::ed25519::Ed25519PrivateKey;

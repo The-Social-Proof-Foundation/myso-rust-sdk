@@ -5,8 +5,8 @@
 //! consumed by the TypeScript `@socialproof/contra` WASM verifier tests.
 
 use myso_contra_crypto::{
-    assert_wire_proof_valid, batch_range_proof_wire, fixtures::SINGLE_AMOUNT_RANGE_PROOF_HEX,
-    SINGLE_AMOUNT_DST,
+    SINGLE_AMOUNT_DST, assert_wire_proof_valid, batch_range_proof_wire,
+    fixtures::SINGLE_AMOUNT_RANGE_PROOF_HEX,
 };
 use rand::SeedableRng;
 use rand::rngs::StdRng;

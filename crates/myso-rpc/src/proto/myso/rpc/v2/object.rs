@@ -508,8 +508,8 @@ impl TryFrom<&ObjectReference> for myso_sdk_types::ObjectReference {
 
 impl From<myso_sdk_types::Owner> for Owner {
     fn from(value: myso_sdk_types::Owner) -> Self {
-        use owner::OwnerKind;
         use myso_sdk_types::Owner::*;
+        use owner::OwnerKind;
 
         let mut message = Self::default();
 

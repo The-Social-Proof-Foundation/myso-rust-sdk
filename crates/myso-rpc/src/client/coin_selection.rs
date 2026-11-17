@@ -4,11 +4,11 @@ use crate::field::FieldMaskUtil;
 use crate::proto::myso::rpc::v2::ListOwnedObjectsRequest;
 use crate::proto::myso::rpc::v2::Object;
 use futures::StreamExt;
-use prost_types::FieldMask;
-use std::str::FromStr;
 use myso_sdk_types::Address;
 use myso_sdk_types::StructTag;
 use myso_sdk_types::TypeTag;
+use prost_types::FieldMask;
+use std::str::FromStr;
 
 impl Client {
     /// Selects coins of a specific type owned by an address until the total value meets the required amount.

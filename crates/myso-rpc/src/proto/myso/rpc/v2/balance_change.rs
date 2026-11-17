@@ -13,7 +13,11 @@ impl From<myso_sdk_types::BalanceChange> for BalanceChange {
 }
 
 impl Merge<&myso_sdk_types::BalanceChange> for BalanceChange {
-    fn merge(&mut self, source: &myso_sdk_types::BalanceChange, mask: &crate::field::FieldMaskTree) {
+    fn merge(
+        &mut self,
+        source: &myso_sdk_types::BalanceChange,
+        mask: &crate::field::FieldMaskTree,
+    ) {
         if mask.contains(Self::ADDRESS_FIELD) {
             self.address = Some(source.address.to_string());
         }

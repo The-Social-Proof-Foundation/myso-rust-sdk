@@ -6,17 +6,19 @@
 
 use std::str::FromStr;
 
-use myso_contra_crypto::amount::{collapse_blindings, encrypt_amount, EncryptedAmount, WellFormedLimb};
-use myso_contra_crypto::group::{RistrettoPoint, Scalar};
+use myso_contra_crypto::amount::{
+    EncryptedAmount, WellFormedLimb, collapse_blindings, encrypt_amount,
+};
 use myso_contra_crypto::elgamal::Ciphertext;
 use myso_contra_crypto::group::{self, g, mul};
+use myso_contra_crypto::group::{RistrettoPoint, Scalar};
 use myso_contra_crypto::proofs::{
-    prove_is_zero, scalar_to_u32_limbs, DdhProof, ElGamalProof, KeyConsistencyProof, MultiRecipient,
+    DdhProof, ElGamalProof, KeyConsistencyProof, MultiRecipient, prove_is_zero, scalar_to_u32_limbs,
 };
-use myso_contra_crypto::types::{dst, PROTOCOL_DDH, PROTOCOL_ELGAMAL, PROTOCOL_KEY_CONSISTENCY};
+use myso_contra_crypto::types::{PROTOCOL_DDH, PROTOCOL_ELGAMAL, PROTOCOL_KEY_CONSISTENCY, dst};
 use myso_contra_crypto::well_formed::contra_range_proofs;
 use myso_sdk_types::{Address, Identifier, StructTag, TypeTag};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use crate::error::ContraError;
 
@@ -31,18 +33,29 @@ pub fn token_account_object_id(
     let package = address(package_id)?;
     let registry = address(account_registry_id)?;
     let owner = address(owner)?;
-    let token = StructTag::from_str(token_type).map_err(|error| ContraError::InvalidArgument(error.to_string()))?;
-    let account_key = TypeTag::from_str(&format!("{}::contra::AccountKey", package)).map_err(|error| ContraError::InvalidArgument(error.to_string()))?;
+    let token = StructTag::from_str(token_type)
+        .map_err(|error| ContraError::InvalidArgument(error.to_string()))?;
+    let account_key = TypeTag::from_str(&format!("{}::contra::AccountKey", package))
+        .map_err(|error| ContraError::InvalidArgument(error.to_string()))?;
     let account = registry.derive_object_id(&account_key, &bcs::to_bytes(&owner).expect("address"));
-    let field_key = TypeTag::Struct(Box::new(struct_tag(&package, "TokenAccountKey", Some(&token))));
+    let field_key = TypeTag::Struct(Box::new(struct_tag(
+        &package,
+        "TokenAccountKey",
+        Some(&token),
+    )));
     // Same name bytes as web `bcs.byteVector().serialize([])` → `[0]`, not a raw empty slice.
-    Ok(account.derive_dynamic_child_id(&field_key, &empty_vec_name()).to_string())
+    Ok(account
+        .derive_dynamic_child_id(&field_key, &empty_vec_name())
+        .to_string())
 }
 
 pub fn account_public_key_hex(token_account_json: &str) -> Result<String, ContraError> {
-    let value: Value = serde_json::from_str(token_account_json).map_err(|error| ContraError::Failed(error.to_string()))?;
-    let account = find_account(&value).ok_or_else(|| ContraError::Failed("missing public key".into()))?;
-    let body = field(account, "pk").ok_or_else(|| ContraError::Failed("missing public key".into()))?;
+    let value: Value = serde_json::from_str(token_account_json)
+        .map_err(|error| ContraError::Failed(error.to_string()))?;
+    let account =
+        find_account(&value).ok_or_else(|| ContraError::Failed("missing public key".into()))?;
+    let body =
+        field(account, "pk").ok_or_else(|| ContraError::Failed("missing public key".into()))?;
     let bytes = byte_field(body)?;
     if bytes.len() != 32 {
         return Err(ContraError::Failed("public key is not 32 bytes".into()));
@@ -50,19 +63,32 @@ pub fn account_public_key_hex(token_account_json: &str) -> Result<String, Contra
     Ok(hex::encode(bytes))
 }
 
-pub fn decrypt_balance(account_key: &[u8], token_account_json: &str) -> Result<(u64, u64, u64), ContraError> {
+pub fn decrypt_balance(
+    account_key: &[u8],
+    token_account_json: &str,
+) -> Result<(u64, u64, u64), ContraError> {
     let secret = account_scalar(account_key)?;
-    let snapshot = parse_snapshot(&serde_json::from_str(token_account_json).map_err(|e| ContraError::Failed(e.to_string()))?)?;
+    let snapshot = parse_snapshot(
+        &serde_json::from_str(token_account_json)
+            .map_err(|e| ContraError::Failed(e.to_string()))?,
+    )?;
     let inverse = secret.invert();
     Ok((
-        snapshot.active.decrypt(&inverse).map_err(ContraError::Failed)?,
-        snapshot.pending.decrypt(&inverse).map_err(ContraError::Failed)?,
+        snapshot
+            .active
+            .decrypt(&inverse)
+            .map_err(ContraError::Failed)?,
+        snapshot
+            .pending
+            .decrypt(&inverse)
+            .map_err(ContraError::Failed)?,
         snapshot.pending_public,
     ))
 }
 
 pub fn plan_transaction(request_json: &str) -> Result<String, ContraError> {
-    let request: Value = serde_json::from_str(request_json).map_err(|e| ContraError::Failed(e.to_string()))?;
+    let request: Value =
+        serde_json::from_str(request_json).map_err(|e| ContraError::Failed(e.to_string()))?;
     let action = required_str(&request, "action")?;
     let plan = match action {
         "create" => plan_create(&request)?,
@@ -70,7 +96,11 @@ pub fn plan_transaction(request_json: &str) -> Result<String, ContraError> {
         "updateBalance" => plan_update(&request)?,
         "transfer" => plan_transfer(&request)?,
         "unwrap" => plan_unwrap(&request)?,
-        other => return Err(ContraError::InvalidArgument(format!("unknown action {other}"))),
+        other => {
+            return Err(ContraError::InvalidArgument(format!(
+                "unknown action {other}"
+            )));
+        }
     };
     serde_json::to_string(&plan).map_err(|e| ContraError::Failed(e.to_string()))
 }
@@ -89,16 +119,27 @@ fn ids(request: &Value) -> Result<Ids, ContraError> {
     let registry = address(required_str(request, "accountRegistryId")?)?;
     let token_registry = address(required_str(request, "tokenRegistryId")?)?;
     let owner = address(required_str(request, "owner")?)?;
-    let token_type = StructTag::from_str(required_str(request, "tokenType")?).map_err(|e| ContraError::InvalidArgument(e.to_string()))?;
+    let token_type = StructTag::from_str(required_str(request, "tokenType")?)
+        .map_err(|e| ContraError::InvalidArgument(e.to_string()))?;
     let package_text = package.to_string();
-    let account_key = TypeTag::from_str(&format!("{package_text}::contra::AccountKey")).map_err(|e| ContraError::InvalidArgument(e.to_string()))?;
+    let account_key = TypeTag::from_str(&format!("{package_text}::contra::AccountKey"))
+        .map_err(|e| ContraError::InvalidArgument(e.to_string()))?;
     let account = registry.derive_object_id(&account_key, &bcs::to_bytes(&owner).expect("address"));
-    let token_key = TypeTag::Struct(Box::new(struct_tag(&package, "TokenKey", Some(&token_type))));
+    let token_key = TypeTag::Struct(Box::new(struct_tag(
+        &package,
+        "TokenKey",
+        Some(&token_type),
+    )));
     let name = empty_vec_name();
     let token = token_registry.derive_object_id(&token_key, &name);
-    let pool_key = TypeTag::from_str(&format!("{package_text}::contra::PoolKey")).map_err(|e| ContraError::InvalidArgument(e.to_string()))?;
+    let pool_key = TypeTag::from_str(&format!("{package_text}::contra::PoolKey"))
+        .map_err(|e| ContraError::InvalidArgument(e.to_string()))?;
     let pool = token.derive_object_id(&pool_key, &name);
-    let token_account_key = TypeTag::Struct(Box::new(struct_tag(&package, "TokenAccountKey", Some(&token_type))));
+    let token_account_key = TypeTag::Struct(Box::new(struct_tag(
+        &package,
+        "TokenAccountKey",
+        Some(&token_type),
+    )));
     let unique = account.derive_object_id(&token_account_key, &name);
     let mut session_id = [0u8; 20];
     session_id.copy_from_slice(&unique.as_bytes()[..20]);
@@ -117,7 +158,10 @@ fn struct_tag(package: &Address, name: &str, arg: Option<&StructTag>) -> StructT
         *package,
         Identifier::from_static("contra"),
         Identifier::new(name).expect("identifier"),
-        arg.cloned().map(|tag| TypeTag::Struct(Box::new(tag))).into_iter().collect(),
+        arg.cloned()
+            .map(|tag| TypeTag::Struct(Box::new(tag)))
+            .into_iter()
+            .collect(),
     )
 }
 
@@ -130,7 +174,13 @@ impl Planner {
         Self { steps: Vec::new() }
     }
 
-    fn call(&mut self, target: &str, type_arguments: Vec<String>, arguments: Vec<Value>, returns: u8) -> usize {
+    fn call(
+        &mut self,
+        target: &str,
+        type_arguments: Vec<String>,
+        arguments: Vec<Value>,
+        returns: u8,
+    ) -> usize {
         let index = self.steps.len();
         self.steps.push(json!({
             "op": "moveCall",
@@ -212,7 +262,10 @@ fn plan_create(request: &Value) -> Result<Value, ContraError> {
         plan.call(
             &format!("{}::contra::new_account", ids.package),
             vec![],
-            vec![object(required_str(request, "accountRegistryId")?), pure_address(required_str(request, "owner")?)],
+            vec![
+                object(required_str(request, "accountRegistryId")?),
+                pure_address(required_str(request, "owner")?),
+            ],
             1,
         )
     } else {
@@ -226,11 +279,21 @@ fn plan_create(request: &Value) -> Result<Value, ContraError> {
         1,
     );
     let key_encryption = key_encryption_option(&mut plan, &ids, &secret, &public, &auditors)?;
-    let account_arg = if account == usize::MAX { object(&ids.account) } else { result(account) };
+    let account_arg = if account == usize::MAX {
+        object(&ids.account)
+    } else {
+        result(account)
+    };
     plan.call(
         &format!("{}::contra::register", ids.package),
         vec![ids.token_type.clone()],
-        vec![account_arg, result(auth), object(&ids.token), result(pk), result(key_encryption)],
+        vec![
+            account_arg,
+            result(auth),
+            object(&ids.token),
+            result(pk),
+            result(key_encryption),
+        ],
         0,
     );
     if account != usize::MAX {
@@ -251,7 +314,10 @@ fn plan_wrap(request: &Value) -> Result<Value, ContraError> {
     let merges = string_list(request.get("mergeCoinObjectIds").unwrap_or(&Value::Null));
     let mut plan = Planner::new();
     if !merges.is_empty() {
-        plan.merge(object(primary), merges.iter().map(|id| object(id)).collect());
+        plan.merge(
+            object(primary),
+            merges.iter().map(|id| object(id)).collect(),
+        );
     }
     let coin = plan.split(object(primary), amount);
     let auth = authorize(&mut plan, &ids);
@@ -278,7 +344,8 @@ fn plan_update(request: &Value) -> Result<Value, ContraError> {
     let snapshot = snapshot_from_request(request)?;
     let mut plan = Planner::new();
     let auth = authorize(&mut plan, &ids);
-    let (should_merge, new_balance, balance_proof) = balance_update(&ids, &secret, &snapshot, 0, Ciphertext::trivial(0))?;
+    let (should_merge, new_balance, balance_proof) =
+        balance_update(&ids, &secret, &snapshot, 0, Ciphertext::trivial(0))?;
     if should_merge {
         plan.call(
             &format!("{}::contra::merge", ids.package),
@@ -292,7 +359,13 @@ fn plan_update(request: &Value) -> Result<Value, ContraError> {
     plan.call(
         &format!("{}::contra::update_active_balance", ids.package),
         vec![ids.token_type],
-        vec![object(&ids.account), result(auth), result(amount), result(proof), result(ddh)],
+        vec![
+            object(&ids.account),
+            result(auth),
+            result(amount),
+            result(proof),
+            result(ddh),
+        ],
         0,
     );
     Ok(plan.finish())
@@ -312,10 +385,16 @@ fn plan_transfer(request: &Value) -> Result<Value, ContraError> {
         .iter()
         .map(|limb| Ciphertext::encrypt(&sender_pk, limb.value, &limb.blinding))
         .collect();
-    let total_blinding = collapse_blindings(&receiver_limbs.iter().map(|limb| limb.blinding).collect::<Vec<_>>());
+    let total_blinding = collapse_blindings(
+        &receiver_limbs
+            .iter()
+            .map(|limb| limb.blinding)
+            .collect::<Vec<_>>(),
+    );
     let total = Ciphertext::encrypt(&sender_pk, amount, &total_blinding);
     let consistency = ElGamalProof::prove(&elgamal, &total_blinding, amount, &total, &sender_pk);
-    let (should_merge, new_balance, balance_proof) = balance_update(&ids, &secret, &snapshot, amount, total)?;
+    let (should_merge, new_balance, balance_proof) =
+        balance_update(&ids, &secret, &snapshot, amount, total)?;
     let mut plan = Planner::new();
     let auth = authorize(&mut plan, &ids);
     if should_merge {
@@ -326,7 +405,14 @@ fn plan_transfer(request: &Value) -> Result<Value, ContraError> {
             0,
         );
     }
-    let receiver_amount = encrypted_amount_call(&mut plan, &ids, &receiver_limbs.iter().map(|limb| limb.ciphertext).collect::<Vec<_>>());
+    let receiver_amount = encrypted_amount_call(
+        &mut plan,
+        &ids,
+        &receiver_limbs
+            .iter()
+            .map(|limb| limb.ciphertext)
+            .collect::<Vec<_>>(),
+    );
     let sender_amount = encrypted_amount_call(&mut plan, &ids, &sender_limbs);
     let amounts_type = format!("{}::encrypted_amount::EncryptedAmount", ids.package);
     let receiver_amounts = plan.vector(&amounts_type, vec![result(receiver_amount)]);
@@ -341,7 +427,14 @@ fn plan_transfer(request: &Value) -> Result<Value, ContraError> {
         1,
     );
     let consistency_arg = elgamal_call(&mut plan, &ids, &consistency);
-    let new_amount = encrypted_amount_call(&mut plan, &ids, &new_balance.iter().map(|limb| limb.ciphertext).collect::<Vec<_>>());
+    let new_amount = encrypted_amount_call(
+        &mut plan,
+        &ids,
+        &new_balance
+            .iter()
+            .map(|limb| limb.ciphertext)
+            .collect::<Vec<_>>(),
+    );
     let ddh = ddh_call(&mut plan, &ids, &balance_proof);
     let batch = plan.call(
         &format!("{}::contra::batched_transfer", ids.package),
@@ -382,7 +475,13 @@ fn plan_unwrap(request: &Value) -> Result<Value, ContraError> {
     let secret = account_scalar(&hex_key(request)?)?;
     let amount = required_u64(request, "amount")?;
     let snapshot = snapshot_from_request(request)?;
-    let (should_merge, new_balance, balance_proof) = balance_update(&ids, &secret, &snapshot, amount, Ciphertext::trivial(amount))?;
+    let (should_merge, new_balance, balance_proof) = balance_update(
+        &ids,
+        &secret,
+        &snapshot,
+        amount,
+        Ciphertext::trivial(amount),
+    )?;
     let mut plan = Planner::new();
     let auth = authorize(&mut plan, &ids);
     if should_merge {
@@ -432,15 +531,31 @@ fn balance_update(
     diff: Ciphertext,
 ) -> Result<(bool, Vec<WellFormedLimb>, DdhProof), ContraError> {
     let inverse = secret.invert();
-    let active = snapshot.active.decrypt(&inverse).map_err(ContraError::Failed)?;
-    let pending = snapshot.pending.decrypt(&inverse).map_err(ContraError::Failed)?;
+    let active = snapshot
+        .active
+        .decrypt(&inverse)
+        .map_err(ContraError::Failed)?;
+    let pending = snapshot
+        .pending
+        .decrypt(&inverse)
+        .map_err(ContraError::Failed)?;
     let should_merge = pending > 0 || snapshot.pending_public > 0;
-    let spendable = if should_merge { active + pending + snapshot.pending_public } else { active };
+    let spendable = if should_merge {
+        active + pending + snapshot.pending_public
+    } else {
+        active
+    };
     if amount > spendable {
-        return Err(ContraError::Failed("Not enough private balance.".to_owned()));
+        return Err(ContraError::Failed(
+            "Not enough private balance.".to_owned(),
+        ));
     }
     let old = if should_merge {
-        snapshot.active.collapse().add(snapshot.pending.collapse()).add(Ciphertext::trivial(snapshot.pending_public))
+        snapshot
+            .active
+            .collapse()
+            .add(snapshot.pending.collapse())
+            .add(Ciphertext::trivial(snapshot.pending_public))
     } else {
         snapshot.active.collapse()
     };
@@ -458,12 +573,25 @@ fn balance_update(
         ],
     }
     .collapse();
-    let proof = prove_is_zero(&ddh_dst, secret, &public, &collapsed.subtract(old).add(diff));
+    let proof = prove_is_zero(
+        &ddh_dst,
+        secret,
+        &public,
+        &collapsed.subtract(old).add(diff),
+    );
     Ok((should_merge, new_balance, proof))
 }
 
-fn encrypted_amount_and_proof(plan: &mut Planner, ids: &Ids, limbs: &[WellFormedLimb]) -> Result<(usize, usize), ContraError> {
-    let amount = encrypted_amount_call(plan, ids, &limbs.iter().map(|limb| limb.ciphertext).collect::<Vec<_>>());
+fn encrypted_amount_and_proof(
+    plan: &mut Planner,
+    ids: &Ids,
+    limbs: &[WellFormedLimb],
+) -> Result<(usize, usize), ContraError> {
+    let amount = encrypted_amount_call(
+        plan,
+        ids,
+        &limbs.iter().map(|limb| limb.ciphertext).collect::<Vec<_>>(),
+    );
     let proof = well_formed_call(plan, ids, &[limbs.to_vec()])?;
     Ok((amount, proof))
 }
@@ -482,7 +610,11 @@ fn encrypted_amount_call(plan: &mut Planner, ids: &Ids, limbs: &[Ciphertext]) ->
     )
 }
 
-fn well_formed_call(plan: &mut Planner, ids: &Ids, batch: &[Vec<WellFormedLimb>]) -> Result<usize, ContraError> {
+fn well_formed_call(
+    plan: &mut Planner,
+    ids: &Ids,
+    batch: &[Vec<WellFormedLimb>],
+) -> Result<usize, ContraError> {
     let flat: Vec<(u64, Scalar)> = batch
         .iter()
         .flat_map(|amount| amount.iter().map(|limb| (limb.value, limb.blinding)))
@@ -567,11 +699,17 @@ fn key_encryption_option(
     }
     let mut key_dst = ids.session;
     key_dst[20] = PROTOCOL_KEY_CONSISTENCY;
-    let proof = KeyConsistencyProof::prove(&key_dst, &limbs, public, auditors, &ciphertexts, &blindings);
+    let proof =
+        KeyConsistencyProof::prove(&key_dst, &limbs, public, auditors, &ciphertexts, &blindings);
     let mut encoded = Vec::new();
     for ciphertext in &ciphertexts {
         let mut rows = vec![group::point_bytes(&ciphertext.commitment).to_vec()];
-        rows.extend(ciphertext.handles.iter().map(|handle| group::point_bytes(handle).to_vec()));
+        rows.extend(
+            ciphertext
+                .handles
+                .iter()
+                .map(|handle| group::point_bytes(handle).to_vec()),
+        );
         encoded.push(result(plan.call(
             &format!("{}::decode::multi_recipient_encryption", ids.package),
             vec![],
@@ -602,10 +740,19 @@ fn key_encryption_option(
     let built = plan.call(
         &format!("{}::auditors::new_key_encryption", ids.package),
         vec![],
-        vec![result(vector), result(proof_arg), pure_bytes(range.first().map(Vec::as_slice).unwrap_or(&[]))],
+        vec![
+            result(vector),
+            result(proof_arg),
+            pure_bytes(range.first().map(Vec::as_slice).unwrap_or(&[])),
+        ],
         1,
     );
-    Ok(plan.call("0x1::option::some", vec![option_type], vec![result(built)], 1))
+    Ok(plan.call(
+        "0x1::option::some",
+        vec![option_type],
+        vec![result(built)],
+        1,
+    ))
 }
 
 struct Snapshot {
@@ -615,16 +762,30 @@ struct Snapshot {
 }
 
 fn snapshot_from_request(request: &Value) -> Result<Snapshot, ContraError> {
-    let raw = request.get("tokenAccountJson").and_then(Value::as_str).unwrap_or("{}");
+    let raw = request
+        .get("tokenAccountJson")
+        .and_then(Value::as_str)
+        .unwrap_or("{}");
     parse_snapshot(&serde_json::from_str(raw).map_err(|e| ContraError::Failed(e.to_string()))?)
 }
 
 fn parse_snapshot(value: &Value) -> Result<Snapshot, ContraError> {
-    let body = find_account(value).ok_or_else(|| ContraError::Failed("token account balance was not in the object".into()))?;
+    let body = find_account(value)
+        .ok_or_else(|| ContraError::Failed("token account balance was not in the object".into()))?;
     Ok(Snapshot {
-        active: parse_amount(field(body, "active").ok_or_else(|| ContraError::Failed("missing active balance".into()))?)?,
-        pending: parse_amount(field(body, "pending").ok_or_else(|| ContraError::Failed("missing pending balance".into()))?)?,
-        pending_public: json_u64(field(body, "public_balance").and_then(|v| field(v, "value")).unwrap_or(&Value::Null)),
+        active: parse_amount(
+            field(body, "active")
+                .ok_or_else(|| ContraError::Failed("missing active balance".into()))?,
+        )?,
+        pending: parse_amount(
+            field(body, "pending")
+                .ok_or_else(|| ContraError::Failed("missing pending balance".into()))?,
+        )?,
+        pending_public: json_u64(
+            field(body, "public_balance")
+                .and_then(|v| field(v, "value"))
+                .unwrap_or(&Value::Null),
+        ),
     })
 }
 
@@ -632,7 +793,8 @@ fn parse_amount(value: &Value) -> Result<EncryptedAmount, ContraError> {
     let amount = field(value, "amount").unwrap_or(value);
     let mut limbs = [Ciphertext::trivial(0); 4];
     for (index, name) in ["l0", "l1", "l2", "l3"].iter().enumerate() {
-        let limb = field(amount, name).ok_or_else(|| ContraError::Failed(format!("missing {name}")))?;
+        let limb =
+            field(amount, name).ok_or_else(|| ContraError::Failed(format!("missing {name}")))?;
         limbs[index] = Ciphertext {
             ciphertext: point_field(limb, "ciphertext")?,
             decryption_handle: point_field(limb, "decryption_handle")?,
@@ -654,7 +816,8 @@ fn byte_field(value: &Value) -> Result<Vec<u8>, ContraError> {
             .map(|item| item.as_u64().map(|n| n as u8))
             .collect::<Option<Vec<_>>>()
             .ok_or_else(|| ContraError::Failed("bad point bytes".into())),
-        Value::String(text) => hex::decode(text.trim_start_matches("0x")).map_err(|e| ContraError::Failed(e.to_string())),
+        Value::String(text) => hex::decode(text.trim_start_matches("0x"))
+            .map_err(|e| ContraError::Failed(e.to_string())),
         _ => Err(ContraError::Failed("missing point bytes".into())),
     }
 }
@@ -671,43 +834,75 @@ fn find_account(value: &Value) -> Option<&Value> {
 }
 
 fn field<'a>(value: &'a Value, name: &str) -> Option<&'a Value> {
-    value.get("fields").and_then(|fields| fields.get(name)).or(value.get(name))
+    value
+        .get("fields")
+        .and_then(|fields| fields.get(name))
+        .or(value.get(name))
 }
 
 fn json_u64(value: &Value) -> u64 {
-    value.as_u64().or_else(|| value.as_str().and_then(|text| text.parse().ok())).unwrap_or(0)
+    value
+        .as_u64()
+        .or_else(|| value.as_str().and_then(|text| text.parse().ok()))
+        .unwrap_or(0)
 }
 
 fn account_scalar(bytes: &[u8]) -> Result<Scalar, ContraError> {
-    group::scalar_from_canonical(bytes).ok_or_else(|| ContraError::InvalidArgument("account key is not a canonical scalar".into()))
+    group::scalar_from_canonical(bytes)
+        .ok_or_else(|| ContraError::InvalidArgument("account key is not a canonical scalar".into()))
 }
 
 fn hex_key(request: &Value) -> Result<Vec<u8>, ContraError> {
     let text = required_str(request, "accountKey")?;
-    hex::decode(text.trim_start_matches("0x")).map_err(|e| ContraError::InvalidArgument(e.to_string()))
+    hex::decode(text.trim_start_matches("0x"))
+        .map_err(|e| ContraError::InvalidArgument(e.to_string()))
 }
 
 fn point_from_hex(text: &str) -> Result<RistrettoPoint, ContraError> {
-    let bytes = hex::decode(text.trim_start_matches("0x")).map_err(|e| ContraError::InvalidArgument(e.to_string()))?;
-    group::point_from_bytes(&bytes).ok_or_else(|| ContraError::InvalidArgument("bad receiver public key".into()))
+    let bytes = hex::decode(text.trim_start_matches("0x"))
+        .map_err(|e| ContraError::InvalidArgument(e.to_string()))?;
+    group::point_from_bytes(&bytes)
+        .ok_or_else(|| ContraError::InvalidArgument("bad receiver public key".into()))
 }
 
 fn point_list(value: &Value) -> Result<Vec<RistrettoPoint>, ContraError> {
-    let Value::Array(items) = value else { return Ok(Vec::new()) };
-    items.iter().filter_map(Value::as_str).map(point_from_hex).collect()
+    let Value::Array(items) = value else {
+        return Ok(Vec::new());
+    };
+    items
+        .iter()
+        .filter_map(Value::as_str)
+        .map(point_from_hex)
+        .collect()
 }
 
 fn string_list(value: &Value) -> Vec<String> {
-    value.as_array().map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_owned)).collect()).unwrap_or_default()
+    value
+        .as_array()
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(|item| item.as_str().map(str::to_owned))
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 fn required_str<'a>(value: &'a Value, key: &str) -> Result<&'a str, ContraError> {
-    value.get(key).and_then(Value::as_str).ok_or_else(|| ContraError::InvalidArgument(format!("missing {key}")))
+    value
+        .get(key)
+        .and_then(Value::as_str)
+        .ok_or_else(|| ContraError::InvalidArgument(format!("missing {key}")))
 }
 
 fn required_u64(value: &Value, key: &str) -> Result<u64, ContraError> {
-    let raw = value.get(key).ok_or_else(|| ContraError::InvalidArgument(format!("missing {key}")))?;
-    json_u64(raw).checked_sub(0).filter(|_| raw.is_string() || raw.is_number()).ok_or_else(|| ContraError::InvalidArgument(format!("bad {key}")))
+    let raw = value
+        .get(key)
+        .ok_or_else(|| ContraError::InvalidArgument(format!("missing {key}")))?;
+    json_u64(raw)
+        .checked_sub(0)
+        .filter(|_| raw.is_string() || raw.is_number())
+        .ok_or_else(|| ContraError::InvalidArgument(format!("bad {key}")))
         .and_then(|_| {
             if raw.as_str() == Some("0") || raw.as_u64() == Some(0) {
                 Err(ContraError::InvalidArgument(format!("bad {key}")))
@@ -733,8 +928,11 @@ fn receiver_account_id(request: &Value, receiver: &str) -> Result<String, Contra
     let registry = address(required_str(request, "accountRegistryId")?)?;
     let owner = address(receiver)?;
     let package_text = package.to_string();
-    let account_key = TypeTag::from_str(&format!("{package_text}::contra::AccountKey")).map_err(|e| ContraError::InvalidArgument(e.to_string()))?;
-    Ok(registry.derive_object_id(&account_key, &bcs::to_bytes(&owner).expect("address")).to_string())
+    let account_key = TypeTag::from_str(&format!("{package_text}::contra::AccountKey"))
+        .map_err(|e| ContraError::InvalidArgument(e.to_string()))?;
+    Ok(registry
+        .derive_object_id(&account_key, &bcs::to_bytes(&owner).expect("address"))
+        .to_string())
 }
 
 #[cfg(test)]
@@ -767,12 +965,17 @@ mod tests {
     #[test]
     fn confidential_token_id_matches_web_myusd() {
         let package = address("0xc1fe").unwrap();
-        let token_registry = address("0xf99d63752b6144d0a786fc7d4894b751bdefac90d61417175d0f27bc35669b0d").unwrap();
+        let token_registry =
+            address("0xf99d63752b6144d0a786fc7d4894b751bdefac90d61417175d0f27bc35669b0d").unwrap();
         let token_type = StructTag::from_str(
             "0xf862bc40fe05aa0b6779ff7894f0c46a6bed19d179f68116119b9d222a32fb19::myusd::MYUSD",
         )
         .unwrap();
-        let token_key = TypeTag::Struct(Box::new(struct_tag(&package, "TokenKey", Some(&token_type))));
+        let token_key = TypeTag::Struct(Box::new(struct_tag(
+            &package,
+            "TokenKey",
+            Some(&token_type),
+        )));
         let token = token_registry.derive_object_id(&token_key, &empty_vec_name());
         assert_eq!(
             token.to_string(),
@@ -813,7 +1016,13 @@ mod decrypt_json_tests {
     #[test]
     fn decrypts_trivial_zero_from_number_array_json() {
         let id = point_bytes(&identity());
-        let bytes_json = format!("[{}]", id.iter().map(|b| b.to_string()).collect::<Vec<_>>().join(","));
+        let bytes_json = format!(
+            "[{}]",
+            id.iter()
+                .map(|b| b.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
+        );
         let limb = format!(
             r#"{{"ciphertext":{{"bytes":{bytes_json}}},"decryption_handle":{{"bytes":{bytes_json}}}}}"#
         );

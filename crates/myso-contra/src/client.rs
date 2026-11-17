@@ -49,10 +49,10 @@ impl ContraClient {
         public_key: Argument,
         key_encryption: Option<Argument>,
     ) -> Argument {
-        let key_encryption =
-            key_encryption.unwrap_or_else(|| builder.pure(&None::<Vec<u8>>));
+        let key_encryption = key_encryption.unwrap_or_else(|| builder.pure(&None::<Vec<u8>>));
         builder.move_call(
-            self.contra_fn("contra", "register").with_type_args(vec![self.type_arg(token_type)]),
+            self.contra_fn("contra", "register")
+                .with_type_args(vec![self.type_arg(token_type)]),
             vec![auth, public_key, key_encryption],
         )
     }
@@ -71,7 +71,8 @@ impl ContraClient {
         let receiver = builder.pure(&receiver);
         let memo = builder.pure(&memo.unwrap_or_default());
         builder.move_call(
-            self.contra_fn("contra", "wrap").with_type_args(vec![self.type_arg(token_type)]),
+            self.contra_fn("contra", "wrap")
+                .with_type_args(vec![self.type_arg(token_type)]),
             vec![auth, confidential_token, coin, receiver, memo],
         )
     }
@@ -122,7 +123,8 @@ impl ContraClient {
         let receiver = builder.pure(&receiver);
         let memo = builder.pure(&memo);
         builder.move_call(
-            self.contra_fn("contra", "add_to_batch").with_type_args(vec![self.type_arg(token_type)]),
+            self.contra_fn("contra", "add_to_batch")
+                .with_type_args(vec![self.type_arg(token_type)]),
             vec![batch, receiver, memo],
         )
     }
@@ -135,7 +137,8 @@ impl ContraClient {
         batch: Argument,
     ) -> Argument {
         builder.move_call(
-            self.contra_fn("contra", "try_finalize").with_type_args(vec![self.type_arg(token_type)]),
+            self.contra_fn("contra", "try_finalize")
+                .with_type_args(vec![self.type_arg(token_type)]),
             vec![batch],
         )
     }
@@ -156,7 +159,8 @@ impl ContraClient {
     ) -> Argument {
         let amount = builder.pure(&amount);
         builder.move_call(
-            self.contra_fn("contra", "try_unwrap").with_type_args(vec![self.type_arg(token_type)]),
+            self.contra_fn("contra", "try_unwrap")
+                .with_type_args(vec![self.type_arg(token_type)]),
             vec![
                 account,
                 auth,
@@ -196,7 +200,11 @@ impl ContraClient {
     }
 
     /// Shared object input for the confidential token registry entry.
-    pub fn confidential_token_input(&self, object_id: Address, initial_version: u64) -> ObjectInput {
+    pub fn confidential_token_input(
+        &self,
+        object_id: Address,
+        initial_version: u64,
+    ) -> ObjectInput {
         ObjectInput::shared(object_id, initial_version, true)
     }
 }
@@ -208,11 +216,8 @@ mod tests {
     #[test]
     fn builds_register_move_call() {
         let package: Address = ContraPackageConfig::DEFAULT_PACKAGE_ID.parse().unwrap();
-        let config = ContraPackageConfig::new(
-            package,
-            "0x10".parse().unwrap(),
-            "0x11".parse().unwrap(),
-        );
+        let config =
+            ContraPackageConfig::new(package, "0x10".parse().unwrap(), "0x11".parse().unwrap());
         let client = ContraClient::new(config);
         let token_type = StructTag::from_str("0x2::myso::MYSO").unwrap();
         let mut builder = TransactionBuilder::new();

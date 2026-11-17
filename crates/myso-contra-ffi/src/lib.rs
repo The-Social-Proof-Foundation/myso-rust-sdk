@@ -22,8 +22,11 @@ pub fn decrypt_private_balance(
     token_account_json: String,
 ) -> Result<PrivateBalance, ContraBindError> {
     let (spendable, pending, pending_public) =
-        myso_contra::engine::decrypt_balance(&account_key, &token_account_json)
-            .map_err(|error| ContraBindError::Failed { reason: error.to_string() })?;
+        myso_contra::engine::decrypt_balance(&account_key, &token_account_json).map_err(
+            |error| ContraBindError::Failed {
+                reason: error.to_string(),
+            },
+        )?;
     Ok(PrivateBalance {
         spendable,
         pending,
@@ -38,18 +41,29 @@ pub fn derived_token_account_id(
     owner: String,
     token_type: String,
 ) -> Result<String, ContraBindError> {
-    myso_contra::engine::token_account_object_id(&package_id, &account_registry_id, &owner, &token_type)
-        .map_err(|error| ContraBindError::Failed { reason: error.to_string() })
+    myso_contra::engine::token_account_object_id(
+        &package_id,
+        &account_registry_id,
+        &owner,
+        &token_type,
+    )
+    .map_err(|error| ContraBindError::Failed {
+        reason: error.to_string(),
+    })
 }
 
 #[uniffi::export]
 pub fn account_public_key_hex(token_account_json: String) -> Result<String, ContraBindError> {
-    myso_contra::engine::account_public_key_hex(&token_account_json)
-        .map_err(|error| ContraBindError::Failed { reason: error.to_string() })
+    myso_contra::engine::account_public_key_hex(&token_account_json).map_err(|error| {
+        ContraBindError::Failed {
+            reason: error.to_string(),
+        }
+    })
 }
 
 #[uniffi::export]
 pub fn plan_private_transaction(request_json: String) -> Result<String, ContraBindError> {
-    myso_contra::engine::plan_transaction(&request_json)
-        .map_err(|error| ContraBindError::Failed { reason: error.to_string() })
+    myso_contra::engine::plan_transaction(&request_json).map_err(|error| ContraBindError::Failed {
+        reason: error.to_string(),
+    })
 }

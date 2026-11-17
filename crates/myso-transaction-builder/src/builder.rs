@@ -1,13 +1,13 @@
 use crate::error::Error;
-use std::collections::BTreeMap;
-use std::collections::BTreeSet;
-use std::collections::HashMap;
 use myso_sdk_types::Address;
 use myso_sdk_types::Digest;
 use myso_sdk_types::Identifier;
 use myso_sdk_types::Transaction;
 use myso_sdk_types::TransactionExpiration;
 use myso_sdk_types::TypeTag;
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
+use std::collections::HashMap;
 
 /// A builder for creating transactions. Use `resolve` to finalize the transaction data.
 #[derive(Default)]
@@ -1139,8 +1139,8 @@ impl ObjectInput {
             return Err(Error::WrongGasObject);
         }
 
-        let mut input =
-            myso_rpc::proto::myso::rpc::v2::ObjectReference::default().with_object_id(self.object_id);
+        let mut input = myso_rpc::proto::myso::rpc::v2::ObjectReference::default()
+            .with_object_id(self.object_id);
         if let Some(version) = self.version {
             input.set_version(version);
         }
