@@ -203,6 +203,223 @@ enum AddressTransactionRelationship {
 	AFFECTED
 }
 
+type AgentReputation {
+	"""
+	Reviews received from sellers.
+	"""
+	asBuyer: RoleReputation!
+	"""
+	Reviews received from buyers.
+	"""
+	asSeller: RoleReputation!
+	"""
+	The agent's principal's credibility, earned from completed paid tasks in either role.
+	"""
+	credibility: Credibility
+	"""
+	Weighted Bayesian average of the two roles.
+	"""
+	overall: OverallReputation!
+}
+
+type AgentSpendBreakdown {
+	agent: SubAgent
+	agentObjectId: String!
+	budgetEnabled: Boolean!
+	budgetMist: BigInt
+	derivedAddress: MySoAddress!
+	label: String!
+	memoryBytes: BigInt!
+	memoryEntries: BigInt!
+	orgSharedMemoryEntries: BigInt!
+	requireApprovalAboveMist: BigInt
+	spentMist: BigInt!
+	usageEvents: BigInt!
+}
+
+type AgenticOrganization {
+	active: Boolean!
+	ageMs: BigInt!
+	agentSpendBreakdown(window: OrganizationStatsWindow, limit: Int! = 20): [AgentSpendBreakdown!]
+	auditLog(filter: AuditLogFilterInput, limit: Int! = 20, offset: Int! = 0): AuditLogConnection
+	createdAt: Int!
+	description: String
+	invitations(invitee: String, status: String): [OrgInvitation!]
+	memoryPermissions(member: String, activeOnly: Boolean): [OrgMemoryPermission!]
+	name: String
+	orgType: OrganizationType!
+	organizationId: String!
+	roleAssignments(member: String, activeOnly: Boolean): [OrgRoleAssignment!]
+	roles: [OrgRole!]
+	rootAgent: SubAgent
+	spendApprovals(status: String, agent: String, limit: Int! = 20): [SpendApproval!]
+	statistics(window: OrganizationStatsWindow): GraphOrganizationStatistics
+	"""
+	Wallets currently allowed to withdraw from the treasury.
+	"""
+	treasuryAccess: [OrgTreasuryAccess!]
+	"""
+	Treasury balance per coin type, as of the latest fund or withdrawal.
+	"""
+	treasuryBalances: [OrgTreasuryBalance!]
+}
+
+type AgenticOrganizationLeaderboardEntry {
+	organization: AgenticOrganization!
+	rank: Int!
+	sortValue: BigInt!
+}
+
+type AgenticOrganizationLeaderboardResponse {
+	entries: [AgenticOrganizationLeaderboardEntry!]!
+	total: Int!
+}
+
+type AiCreditAgentBudget {
+	agentObjectId: String!
+	budgetMist: BigInt
+	dailyCapMist: BigInt
+	enabled: Boolean!
+	monthlyCapMist: BigInt
+	requireApprovalAboveMist: BigInt
+	spentMist: BigInt!
+}
+
+type AiCreditBalance {
+	active: Boolean!
+	agentBudgets: [AiCreditAgentBudget!]
+	balanceId: String!
+	balanceMist: Int!
+	contractVersion: Int!
+	credits: Int!
+	dailyCapMist: Int
+	monthlyCapMist: Int
+	pendingApprovals: [SpendApproval!]
+	settlementNonce: Int!
+	spentTotalMist: Int!
+	usageHistory(first: Int! = 20): [AiCreditUsageLine!]
+}
+
+type AiCreditConfig {
+	"""
+	Catalog version label carried by the AI credit pricing catalog, when set.
+	"""
+	catalogVersion: String
+	"""
+	Maximum single settlement amount (in MYSO base units) permitted per usage receipt.
+	"""
+	maxSingleSettlementMist: Int!
+	"""
+	Minimum deposit (in MYSO base units) required to open an AI credit balance.
+	"""
+	minDepositMist: Int!
+	"""
+	Markup in basis points applied on top of oracle AI credit pricing (10000 = 100%).
+	"""
+	oracleMarkupBps: Int!
+	"""
+	Hex-encoded ed25519 public key the AI credit oracle uses to sign usage receipts.
+	"""
+	oraclePubkeyHex: String!
+	"""
+	Time-to-live (ms) for a usage receipt before it is considered stale.
+	"""
+	receiptTtlMs: Int!
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID of the last config update.
+	"""
+	transactionId: String!
+	"""
+	Treasury address that receives AI credit fees.
+	"""
+	treasuryAddress: String!
+	"""
+	Last updated timestamp (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Address that last updated the configuration.
+	"""
+	updatedBy: String!
+	"""
+	Configuration version.
+	"""
+	version: Int!
+}
+
+type AiCreditUsageLine {
+	amountMist: Int!
+	createdAt: DateTime!
+	modelId: String
+	receiptId: String!
+	settled: Boolean!
+	settlementTx: String
+	usageKind: Int!
+}
+
+type AncestrySnapshot {
+	ancestorIds: JSON
+	ancestryHash: String
+	ancestryVersion: Int!
+	mediaAssetId: String!
+}
+
+type AnonymousVote {
+	decryptionStatus: Int!
+	processingSuccess: Boolean!
+	proposalId: String!
+	submittedAt: Int!
+	voterAddress: MySoAddress!
+}
+
+type AnonymousVotingStats {
+	anonymousVotesAgainst: Int!
+	anonymousVotesFor: Int!
+	failedDecryptions: Int!
+	pendingDecryption: Int!
+	successfullyDecrypted: Int!
+	totalAnonymousVotes: Int!
+}
+
+type AnonymousVotingTrend {
+	day: String!
+	failedDecryptions: Int!
+	successfulDecryptions: Int!
+	totalVotes: Int!
+}
+
+type AuditLogConnection {
+	entries: [AuditLogEntry!]!
+}
+
+type AuditLogEntry {
+	accountId: String
+	action: String!
+	actorAddress: MySoAddress!
+	actorType: String!
+	id: BigInt!
+	metadata: JSON
+	newState: JSON
+	organizationId: String
+	prevState: JSON
+	source: String!
+	targetId: String!
+	targetType: String!
+	time: DateTime!
+	txDigest: String
+}
+
+input AuditLogFilterInput {
+	action: String
+	actor: String
+	source: String
+	targetType: String
+}
+
 """
 System transaction for creating the on-chain state used by zkLogin.
 """
@@ -392,7 +609,7 @@ type BlockedPlatformSummary {
 	Profile of the user who blocked the platform.
 	"""
 	blockedByProfile: ProfileSummary
-	createdAt: String!
+	createdAt: Int!
 	platformId: String!
 	platformName: String!
 }
@@ -400,8 +617,8 @@ type BlockedPlatformSummary {
 type BlockedProfileSummary {
 	address: MySoAddress!
 	displayName: String
-	firstBlockedAt: String!
-	lastBlockedAt: String!
+	firstBlockedAt: Int!
+	lastBlockedAt: Int!
 	profilePhoto: String
 	username: String!
 }
@@ -824,10 +1041,19 @@ type CommandResult {
 }
 
 type CommentSummary {
+	attribution: SocialAttribution!
 	commentCount: Int!
 	commentId: String!
 	content: String!
 	createdAt: Int!
+	"""
+	Deletion events for this comment (paginated, newest first).
+	"""
+	deletionEvents(limit: Int, offset: Int): [PostDeletionEvent!]
+	"""
+	Platform moderation actions on this comment (paginated, newest first).
+	"""
+	moderationEvents(limit: Int, offset: Int): [PostModerationEvent!]
 	owner: String!
 	"""
 	Profile of the comment owner (username, display name, photo, etc.).
@@ -837,6 +1063,62 @@ type CommentSummary {
 	postId: String!
 	profileId: String!
 	reactionCount: Int!
+	"""
+	User reports filed against this comment (paginated, newest first).
+	"""
+	reports(limit: Int, offset: Int): [PostReport!]
+	"""
+	Commenter tip earnings credited on-chain (`Comment.tips_received`).
+	"""
+	tipsReceived: Int!
+}
+
+type CommunityVote {
+	approve: Boolean!
+	proposalId: String!
+	voteCost: Int!
+	voteTime: Int!
+	voteWeight: Int!
+	voterAddress: MySoAddress!
+}
+
+type CommunityVoteEligibility {
+	"""
+	True when the chain would accept a community vote from this wallet on this registry.
+	"""
+	eligible: Boolean!
+	"""
+	Why the wallet cannot vote; null when eligible.
+	"""
+	reason: CommunityVoteIneligibleReason
+}
+
+enum CommunityVoteIneligibleReason {
+	"""
+	Wallet does not own a MySocial profile.
+	"""
+	NO_PROFILE
+	"""
+	Wallet has not joined (or has left) the platform that owns the registry.
+	"""
+	NOT_MEMBER
+	"""
+	The platform has blocked this wallet.
+	"""
+	BLOCKED
+	"""
+	No indexed platform owns this platform registry.
+	"""
+	PLATFORM_NOT_FOUND
+}
+
+type CompositionAnalysis {
+	analysisJson: JSON
+	analyzedAt: Int!
+	compositionStatus: PostCompositionStatus!
+	monetizationStatus: PostMonetizationStatus!
+	postId: String!
+	usageContext: Int!
 }
 
 """
@@ -940,6 +1222,21 @@ type ConsensusObjectRead {
 	object: Object
 }
 
+type ContainerUsageDenial {
+	bindingId: Int!
+	denialScope: Int!
+}
+
+type Credibility {
+	accountId: String!
+	credibilityBps: Int!
+	settledCount: Int!
+	"""
+	Total settled volume in MIST, as a decimal string (it is a u128 on-chain).
+	"""
+	volumeMist: String!
+}
+
 """
 ISO-8601 Date and Time: RFC3339 in UTC with format: YYYY-MM-DDTHH:MM:SS.mmmZ. Note that the milliseconds part is optional, and it may be omitted if its value is 0.
 """
@@ -950,14 +1247,28 @@ type Delegate {
 	Delegate address.
 	"""
 	address: MySoAddress!
+	blockedBySubject: Boolean
+	blockedByViewer: Boolean
 	"""
 	Downvotes (delegate ratings).
 	"""
 	downvotes: Int!
 	"""
+	On-chain `GovernanceDAO` object id for this delegate row's registry instance.
+	"""
+	governanceRegistryId: String!
+	"""
 	Whether the delegate is currently active.
 	"""
 	isActive: Boolean!
+	"""
+	Social profile for this delegate's address.
+	"""
+	profile: ProfileSummary
+	"""
+	Proposals on which this delegate has voted.
+	"""
+	proposals: [Proposal!]
 	"""
 	Proposals reviewed.
 	"""
@@ -967,9 +1278,21 @@ type Delegate {
 	"""
 	proposalsSubmitted: Int!
 	"""
-	Registry type (0=ecosystem, 1=proof of creativity, 3=platform).
+	Delegate ratings (upvotes/downvotes) for this delegate (paginated).
+	"""
+	ratings(limit: Int, offset: Int): [DelegateRating!]
+	"""
+	Registry type (0=ecosystem, 1=proof of creativity, 2=SPoT, 3=platform).
 	"""
 	registryType: Int!
+	"""
+	Proposals on which the delegate sided with the losing outcome.
+	"""
+	sidedLosingProposals: Int!
+	"""
+	Proposals on which the delegate sided with the winning outcome.
+	"""
+	sidedWinningProposals: Int!
 	"""
 	Term end (epoch).
 	"""
@@ -982,6 +1305,89 @@ type Delegate {
 	Upvotes (delegate ratings).
 	"""
 	upvotes: Int!
+	viewerFollowsViewer: Boolean
+	viewerIsFollowing: Boolean
+	"""
+	The viewer's latest delegate rating (up / down / cleared) when `viewer` was set on `delegates` or `delegate`.
+	`CLEARED` means the viewer removed their vote; aggregate counts may still reflect prior activity.
+	"""
+	viewerRatingVoteKind: DelegateRatingVoteKind
+	"""
+	Generation whose community vote counters are live. `0` is the founding generation.
+	"""
+	voteGeneration: Int!
+}
+
+type DelegateRating {
+	governanceRegistryId: String!
+	isActiveDelegate: Boolean!
+	ratedAt: Int!
+	registryType: Int!
+	targetAddress: MySoAddress!
+	voteKind: DelegateRatingVoteKind!
+	voterAddress: MySoAddress!
+}
+
+enum DelegateRatingVoteKind {
+	DOWN
+	UP
+	CLEARED
+}
+
+type DelegateVote {
+	approve: Boolean!
+	delegateAddress: MySoAddress!
+	proposalId: String!
+	reason: String
+	voteTime: Int!
+}
+
+type DerivativeEdge {
+	ancestryVersion: Int!
+	childAssetId: String!
+	licenseInstanceId: String!
+	parentAssetId: String!
+	parentShareBps: Int!
+	relationshipId: Int!
+	relationshipType: DerivativeRelationshipType!
+	templateVersionId: String!
+}
+
+type DerivativeGraph {
+	assetId: String!
+	childEdges: [DerivativeEdge!]!
+	parentEdges: [DerivativeEdge!]!
+}
+
+"""
+Move `media_asset::relationship_*` constants.
+"""
+enum DerivativeRelationshipType {
+	UNSPECIFIED
+	REMIX
+	SAMPLE
+	COVER
+	MASHUP
+}
+
+type DetectedAssetRelationship {
+	accusedAssetId: String
+	accusedPendingId: String!
+	detectedAt: Int!
+	originalAssetId: String!
+	proposalId: String!
+	similarityBps: Int!
+	status: DetectedAssetRelationshipStatus!
+}
+
+"""
+Move `proof_of_creativity` detected relationship status constants.
+"""
+enum DetectedAssetRelationshipStatus {
+	PROPOSED
+	ACCEPTED
+	REJECTED
+	FINALIZED
 }
 
 """
@@ -1198,6 +1604,41 @@ input DynamicFieldName {
 The value of a dynamic field (`MoveValue`) or dynamic object field (`MoveObject`).
 """
 union DynamicFieldValue = MoveObject | MoveValue
+
+type EcosystemTreasury {
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID of the last config update.
+	"""
+	transactionId: String!
+	"""
+	Treasury address that receives ecosystem fees (e.g. profile sale fees).
+	"""
+	treasuryAddress: String!
+	"""
+	Last updated timestamp (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Address that last updated the configuration.
+	"""
+	updatedBy: String!
+	"""
+	Configuration version.
+	"""
+	version: Int!
+}
+
+type EmbeddedAssetBinding {
+	bindingId: Int!
+	mediaComponent: Int!
+	sourceAssetId: String!
+	stem: Int!
+	usageClass: Int!
+}
 
 """
 System transaction that supersedes `ChangeEpochTransaction` as the new way to run transactions at the end of an epoch. Behaves similarly to `ChangeEpochTransaction` but can accommodate other optional transactions to run at the end of the epoch.
@@ -1650,6 +2091,30 @@ type GenesisTransaction {
 	objects(first: Int, after: String, last: Int, before: String): ObjectConnection
 }
 
+type GovernanceEvent {
+	createdAt: Int!
+	eventData: JSON!
+	eventId: String!
+	eventType: String!
+	governanceRegistryId: String
+	id: Int!
+	proposalId: String
+	registryType: Int!
+}
+
+"""
+Move `governance::STATUS_*` constants.
+"""
+enum GovernanceProposalStatus {
+	SUBMITTED
+	DELEGATE_REVIEW
+	COMMUNITY_VOTING
+	APPROVED
+	REJECTED
+	IMPLEMENTED
+	OWNER_RESCIND
+}
+
 type GovernanceRegistry {
 	"""
 	Voting configuration (term, costs, quorum, etc.).
@@ -1660,13 +2125,34 @@ type GovernanceRegistry {
 	"""
 	delegateCount: Int!
 	"""
+	Whether, and how, the AI Jury can take over this registry's proposals. Null when the
+	registry has never turned the jury on, in which case governance behaves as it always has.
+	"""
+	juryPolicy: RegistryJuryPolicy
+	"""
+	Largest completed delegate-term boundary epoch applied by a panel refresh on chain (`None` if unknown or pre-indexer).
+	"""
+	lastDelegatePanelBoundaryEpoch: Int
+	"""
+	Platform details (when registry_type=3). Resolved by platform_id when from governanceRegistry(platformId), else by registry_id.
+	"""
+	platform: Platform
+	"""
 	Registry object ID on-chain.
 	"""
 	registryId: String!
 	"""
-	Registry type (0=ecosystem, 1=proof of creativity, 3=platform).
+	Registry type (0=ecosystem, 1=proof of creativity, 2=SPoT, 3=platform).
 	"""
 	registryType: Int!
+	"""
+	Platform revenue summary (12-month metrics). Only when registry fetched via governanceRegistry(platformId).
+	"""
+	revenue: PlatformRevenueSummary
+	"""
+	Governance stats (delegate/proposal counts by registry type).
+	"""
+	stats: GovernanceStats
 }
 
 type GovernanceRegistryConfig {
@@ -1683,6 +2169,10 @@ type GovernanceRegistryConfig {
 	"""
 	proposalSubmissionCost: Int!
 	"""
+	Quadratic base cost for additional votes.
+	"""
+	quadraticBaseCost: Int!
+	"""
 	Quorum votes required.
 	"""
 	quorumVotes: Int!
@@ -1690,6 +2180,90 @@ type GovernanceRegistryConfig {
 	Voting period in milliseconds.
 	"""
 	votingPeriodMs: Int!
+}
+
+type GovernanceStats {
+	"""
+	Active delegates count.
+	"""
+	activeDelegates: Int!
+	"""
+	Approved proposals count.
+	"""
+	approvedProposals: Int!
+	"""
+	Implemented proposals count.
+	"""
+	implementedProposals: Int!
+	"""
+	In-review proposals count.
+	"""
+	inReviewProposals: Int!
+	"""
+	Pending nominees count.
+	"""
+	pendingNominees: Int!
+	"""
+	On-chain governance registry object id this row summarizes.
+	"""
+	registryId: String!
+	"""
+	Registry type (0=ecosystem, 1=proof of creativity, 2=SPoT, 3=platform).
+	"""
+	registryType: Int!
+	"""
+	Rejected proposals count.
+	"""
+	rejectedProposals: Int!
+	"""
+	Rescinded proposals count.
+	"""
+	rescindedProposals: Int!
+	"""
+	Submitted proposals count.
+	"""
+	submittedProposals: Int!
+	"""
+	Voting proposals count.
+	"""
+	votingProposals: Int!
+}
+
+type GraphOrganizationStatistics {
+	activeAgents: Int!
+	aiCreditSpentMist: BigInt!
+	aiCreditUsageEvents: BigInt!
+	attributionCoverage: Float!
+	estimatedAssetsUnderManagementMyso: BigInt!
+	insufficientSample: Boolean!
+	memoryBytes: BigInt!
+	memoryEntries: BigInt!
+	netCashFlowMyso: BigInt!
+	orgSharedMemoryEntries: BigInt!
+	organizationAgeMs: BigInt!
+	originalityPostsAnalyzed: BigInt!
+	originalityScoreAverage: Float
+	spotAccuracy: Float
+	spotBetsResolved: BigInt!
+	statsRollupAt: DateTime
+	totalActionsExecuted: BigInt!
+	totalAgents: Int!
+	totalCounterparties: BigInt!
+	totalEngagement: BigInt!
+	totalOutboundSpendMyso: BigInt!
+	totalPosts: BigInt!
+	totalRevenueMyso: BigInt!
+	totalSpotParticipation: BigInt!
+	totalTransactions: BigInt!
+}
+
+type GraphVestingPiece {
+	amountBps: Int!
+	curveFactor: Int!
+	duration: Int!
+	kind: String!
+	pieceAmount: Int!
+	timeOffset: Int!
 }
 
 """
@@ -1868,11 +2442,172 @@ type Input {
 	ix: Int
 }
 
+type InsuranceConfig {
+	"""
+	Exposure multiplier cap, in basis points.
+	"""
+	exposureCapBps: Int!
+	"""
+	Exposure curve parameter K, in basis points.
+	"""
+	exposureKBps: Int!
+	"""
+	Fee in basis points.
+	"""
+	feeBps: Int!
+	"""
+	Implied probability floor, in basis points.
+	"""
+	impliedProbFloorBps: Int!
+	"""
+	Whether insurance is enabled.
+	"""
+	insuranceEnabled: Boolean!
+	"""
+	Liquidity multiplier cap, in basis points.
+	"""
+	liqCapBps: Int!
+	"""
+	Reference pool size for the liquidity multiplier.
+	"""
+	liqRefAmount: Int!
+	"""
+	Maximum coverage in basis points.
+	"""
+	maxCoverageBps: Int!
+	"""
+	Maximum coverage as a fraction of the insured option, in basis points.
+	"""
+	maxCoverageFractionOfOptionBps: Int!
+	"""
+	Maximum policy duration in milliseconds.
+	"""
+	maxDurationMs: Int!
+	"""
+	Maximum combined risk multiplier cap, in basis points.
+	"""
+	maxRiskMultiplierBps: Int!
+	"""
+	Minimum coverage in basis points.
+	"""
+	minCoverageBps: Int!
+	"""
+	Minimum premium amount charged per policy.
+	"""
+	minPremiumAmount: Int!
+	"""
+	Minimum SPoT pool total liquidity required for pricing.
+	"""
+	minSpotTotalLiquidity: Int!
+	"""
+	Base odds multiplier in basis points applied in `compute_spot_risk_quote` (replaces the prior hardcoded 5000 bps).
+	"""
+	oddsBaseBps: Int!
+	"""
+	Odds multiplier cap, in basis points.
+	"""
+	oddsCapBps: Int!
+	"""
+	Whether to enforce a 1x odds floor.
+	"""
+	oddsFloor1X: Boolean!
+	"""
+	SPoT smoothing applied per option for implied probability.
+	"""
+	spotSmoothingPerOption: Int!
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID of the last config update.
+	"""
+	transactionId: String!
+	"""
+	Last updated timestamp (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Address that last updated the configuration.
+	"""
+	updatedBy: String!
+	"""
+	Configuration version.
+	"""
+	version: Int!
+}
+
+type InsuranceConfiguration {
+	"""
+	Insurance pricing config (risk pricing, odds, exposure, fee bps).
+	"""
+	pricing: InsuranceConfig
+	"""
+	Insurance router config (reserve limits, vault health, max route legs).
+	"""
+	router: InsuranceRouterConfig
+}
+
+type InsuranceCoverageRoute {
+	contractVersion: Int!
+	coverageBps: Int!
+	createdAt: Int!
+	durationMs: Int!
+	expiryTimeMs: Int!
+	insured: MySoAddress!
+	marketId: String!
+	optionId: Int!
+	policyIds: JSON!
+	routeId: String!
+	totalBackstopSweep: Int!
+	totalCovered: Int!
+	totalPremium: Int!
+	totalReserve: Int!
+	transactionId: String!
+	vaultIds: JSON!
+}
+
+type InsuranceModuleEvent {
+	createdAt: Int!
+	eventData: JSON!
+	eventId: String!
+	eventType: String!
+	id: Int!
+}
+
 type InsurancePolicy {
+	"""
+	Portion of premium swept to the insurance backstop pool for this leg.
+	"""
+	backstopSweepAmount: Int!
+	"""
+	Vault utilization curve component before SPoT risk layering.
+	"""
+	basePremium: Int!
+	"""
+	On-chain contract version for this policy object.
+	"""
+	contractVersion: Int!
+	"""
+	Coverage in basis points.
+	"""
+	coverageBps: Int!
 	"""
 	Covered amount.
 	"""
 	coveredAmount: Int!
+	"""
+	Created at (epoch milliseconds).
+	"""
+	createdAt: Int!
+	"""
+	Policy expiry time (epoch milliseconds).
+	"""
+	expiryTimeMs: Int!
+	"""
+	Implied probability of insured option winning (`p_win`), basis points out of 10_000.
+	"""
+	impliedProbabilityBps: Int!
 	"""
 	Insured address.
 	"""
@@ -1882,6 +2617,22 @@ type InsurancePolicy {
 	"""
 	marketId: String!
 	"""
+	Total SPoT pool (`total_option_escrow`) at quote time.
+	"""
+	marketTotalAmount: Int!
+	"""
+	Option-side SPoT escrow (`option_amount`) at quote time.
+	"""
+	optionEscrowAmount: Int!
+	"""
+	Option ID (0 or 1 for binary markets).
+	"""
+	optionId: Int!
+	"""
+	Indexed lifecycle rows for this policy (`insurance_policy_events`). Returns null when social DB not configured.
+	"""
+	policyEvents(limit: Int, offset: Int): [InsurancePolicyEvent!]
+	"""
 	Unique policy identifier.
 	"""
 	policyId: String!
@@ -1890,24 +2641,247 @@ type InsurancePolicy {
 	"""
 	premiumPaid: Int!
 	"""
+	Raw utilization × risk multiplier before minimum premium floor.
+	"""
+	premiumRaw: Int!
+	"""
+	Combined risk multiplier in basis points (post caps; premium ≈ base × this / 10_000 before floor).
+	"""
+	riskMultiplierBps: Int!
+	"""
+	Aggregated route object id when this policy was bought via `route_buy_coverage_4`.
+	"""
+	routeId: MySoAddress
+	"""
+	Zero-based leg index within the route (only when `route_id` is set).
+	"""
+	routeLegIndex: Int
+	"""
+	Policy start time (epoch milliseconds).
+	"""
+	startTimeMs: Int!
+	"""
 	Policy status (1=ACTIVE, 2=CANCELLED, 3=CLAIMED, 4=EXPIRED).
 	"""
 	status: Int!
+	"""
+	Transaction ID of the policy creation.
+	"""
+	transactionId: String!
+	"""
+	Updated at (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Vault ID backing this policy.
+	"""
+	vaultId: String!
+}
+
+type InsurancePolicyEvent {
+	basePremium: Int
+	coverageBps: Int!
+	coveredAmount: Int!
+	eventType: String!
+	feePaid: Int
+	id: Int!
+	impliedProbabilityBps: Int
+	insured: MySoAddress!
+	marketId: String!
+	marketTotalAmount: Int
+	optionEscrowAmount: Int
+	optionId: Int!
+	payout: Int
+	policyId: String!
+	premiumPaid: Int!
+	premiumRaw: Int
+	refundedAmount: Int
+	reserveLocked: Int!
+	riskMultiplierBps: Int
+	time: Int!
+	timestampMs: Int!
+	transactionId: String!
+}
+
+type InsuranceRouteFill {
+	backstopSweepAmount: Int!
+	coveredAmount: Int!
+	createdAt: Int!
+	eventId: String!
+	id: Int!
+	legIndex: Int!
+	policyId: String!
+	premiumPaid: Int!
+	reserveLocked: Int!
+	routeId: String!
+	timestampMs: Int!
+	transactionId: String!
+	vaultId: String!
+}
+
+type InsuranceRouterConfig {
+	"""
+	Maximum number of legs permitted in a single coverage route (enforced at runtime).
+	"""
+	maxRouteLegs: Int!
+	"""
+	Maximum route reserve that may be locked across a single market.
+	"""
+	maxRouteReserveMarket: Int!
+	"""
+	Maximum route reserve that may be locked against a single SPoT option.
+	"""
+	maxRouteReserveOption: Int!
+	"""
+	Maximum route reserve that may be locked for a single user across routes.
+	"""
+	maxRouteReserveUser: Int!
+	"""
+	Maximum vault concentration allowed, in basis points (10000 = 100%).
+	"""
+	maxVaultConcentrationBps: Int!
+	"""
+	Minimum vault health factor required, in basis points (10000 = 100%).
+	"""
+	minVaultHealthFactorBps: Int!
+	"""
+	Whether the coverage router is paused.
+	"""
+	paused: Boolean!
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID of the last config update.
+	"""
+	transactionId: String!
+	"""
+	Last updated timestamp (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Address that last updated the configuration.
+	"""
+	updatedBy: String!
+	"""
+	Configuration version.
+	"""
+	version: Int!
 }
 
 type InsuranceVault {
+	"""
+	Base rate in basis points per day.
+	"""
+	baseRateBpsPerDay: Int!
 	"""
 	Capital balance.
 	"""
 	capitalBalance: Int!
 	"""
+	Created at (epoch milliseconds).
+	"""
+	createdAt: Int!
+	"""
+	Whether the vault accepts new coverage.
+	"""
+	enabled: Boolean!
+	"""
+	Vault exposures by market/option. Returns empty when social DB not configured.
+	"""
+	exposures: [InsuranceVaultExposure!]
+	"""
+	Maximum exposure per market.
+	"""
+	maxExposurePerMarket: Int!
+	"""
+	Maximum exposure reserved per option (0 = unlimited).
+	"""
+	maxExposurePerOption: Int!
+	"""
+	Maximum exposure per user.
+	"""
+	maxExposurePerUser: Int!
+	"""
+	Whether the vault is admin-paused for new coverage.
+	"""
+	paused: Boolean!
+	"""
+	Reserved amount (locked for active policies).
+	"""
+	reserved: Int!
+	"""
+	Transaction ID of the vault creation.
+	"""
+	transactionId: String!
+	"""
+	Vault transactions (paginated). Returns empty when social DB not configured.
+	"""
+	transactions(limit: Int, offset: Int): [InsuranceVaultTransaction!]
+	"""
 	Underwriter address.
 	"""
 	underwriter: MySoAddress!
 	"""
+	Updated at (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Per-insured reserved totals for this vault (`insurance_user_exposures`). Returns null when social DB not configured.
+	"""
+	userExposureTotals: [InsuranceVaultUserExposure!]
+	"""
+	Utilization multiplier in basis points.
+	"""
+	utilizationMultiplierBps: Int!
+	"""
 	Unique vault identifier.
 	"""
 	vaultId: String!
+	"""
+	Vault version.
+	"""
+	version: Int!
+}
+
+type InsuranceVaultExposure {
+	"""
+	Market ID.
+	"""
+	marketId: String!
+	"""
+	Option ID (0 or 1).
+	"""
+	optionId: Int!
+	"""
+	Total exposure (reserved amount) for this market/option.
+	"""
+	totalExposure: Int!
+}
+
+type InsuranceVaultTransaction {
+	"""
+	Amount (positive for credits, negative for debits).
+	"""
+	amount: Int!
+	"""
+	Balance after this transaction.
+	"""
+	balanceAfter: Int!
+	"""
+	Timestamp (epoch milliseconds).
+	"""
+	timestampMs: Int!
+	"""
+	Transaction type (e.g. deposit, withdraw, reserve, release).
+	"""
+	transactionType: String!
+}
+
+type InsuranceVaultUserExposure {
+	insured: MySoAddress!
+	totalReserved: Int!
 }
 
 
@@ -1915,6 +2889,154 @@ type InsuranceVault {
 Arbitrary JSON data.
 """
 scalar JSON
+
+type JuryCase {
+	appealsUsed: Int!
+	caseId: String!
+	createdAtMs: Int!
+	currentRound: Int!
+	feeMist: Int!
+	"""
+	Index into the case's fixed menu of outcomes, once the case is final.
+	"""
+	finalOutcome: Int
+	finalizedAtMs: Int
+	"""
+	What each juror who voted is paid, once the case has ended.
+	"""
+	perJurorFeeMist: Int
+	"""
+	Where the fees the jurors did not claim were sent. Null until the case is swept.
+	"""
+	remainderRecipient: MySoAddress
+	"""
+	MIST swept back to `remainderRecipient`. Null until the case is swept; 0 when nothing was
+	left.
+	"""
+	remainderSweptMist: Int
+	"""
+	For a proposal, the step the case decides.
+	"""
+	stage: JuryStage!
+	state: JuryCaseState!
+	"""
+	The task or proposal the case decides.
+	"""
+	subjectId: String!
+	subjectKind: JurySubjectKind!
+}
+
+"""
+Lifecycle of a jury case.
+"""
+enum JuryCaseState {
+	EVIDENCE
+	AWAITING_DRAW
+	SELECTING
+	VOTING
+	TALLIED
+	FINAL
+	FAILED
+	CANCELLED
+}
+
+"""
+What the jury decided.
+"""
+enum JuryDecision {
+	"""
+	Council step: send to the community vote. Community step: approve.
+	"""
+	FORWARD
+	"""
+	Reject the proposal.
+	"""
+	REJECT
+}
+
+"""
+Where the jury stands on one step.
+"""
+enum JuryReviewState {
+	"""
+	Delegates are referring the proposal; no majority yet.
+	"""
+	REFERRING
+	"""
+	The step earned a jury and anyone can hand the proposal over.
+	"""
+	AWAITING_ESCALATION
+	"""
+	A jury holds the step, so the humans at it can no longer decide.
+	"""
+	WITH_JURY
+	"""
+	The jury decided, or could not and the step's default applied.
+	"""
+	DECIDED
+}
+
+"""
+The human step of a proposal that the jury can take over.
+"""
+enum JuryStage {
+	"""
+	The delegate council's review.
+	"""
+	COUNCIL
+	"""
+	The public community vote.
+	"""
+	COMMUNITY
+}
+
+"""
+What a case is about.
+"""
+enum JurySubjectKind {
+	TASK
+	GOVERNANCE_PROPOSAL
+}
+
+"""
+Why a step went to the jury.
+"""
+enum JuryTrigger {
+	"""
+	Not recorded yet.
+	"""
+	NONE
+	"""
+	A majority of delegates referred it.
+	"""
+	REFERRAL_MAJORITY
+	"""
+	The council tied.
+	"""
+	COUNCIL_TIE
+	"""
+	The council ran out of time.
+	"""
+	COUNCIL_DEADLINE
+	"""
+	The community vote missed quorum.
+	"""
+	QUORUM_NOT_MET
+	"""
+	The community vote tied.
+	"""
+	VOTE_TIE
+}
+
+type LicenseTemplateTerms {
+	governingLaw: String
+	instanceRevocable: Boolean!
+	legalTermsHash: String
+	legalTermsUri: String
+	licenseSchemaVersion: Int!
+	templateVersionId: String!
+	version: Int!
+}
 
 """
 Information used by a package to link to a specific version of its dependency.
@@ -1948,6 +3070,174 @@ type MakeMoveVecCommand {
 	type: MoveType
 }
 
+type MediaAsset {
+	activeRightsProposal: Proposal
+	"""
+	Active rights dispute including the committed beneficiary target.
+	"""
+	activeRightsProposalLink: MediaAssetRightsProposalLink
+	ancestry: AncestrySnapshot
+	assetKind: MediaAssetKind!
+	authorizationVersion: Int!
+	derivativeGraph(limit: Int, offset: Int): DerivativeGraph
+	detectedRelationships(limit: Int, offset: Int): [DetectedAssetRelationship!]
+	economicsVersion: Int!
+	futureUsagePaused: Boolean!
+	licenseInstances(limit: Int, offset: Int): [MediaAssetLicenseInstance!]
+	licenseTerms(limit: Int, offset: Int): [LicenseTemplateTerms!]
+	lineageParentId: String
+	mediaAssetId: String!
+	mediaType: MediaAssetMediaType!
+	originalityStatus: MediaAssetOriginalityStatus!
+	provenanceStatus: MediaAssetProvenanceStatus!
+	registeredAt: Int!
+	registeredBy: String!
+	resolvedPolicy: ResolvedPolicy
+	rightsDisputesSubmitted: Int
+	"""
+	Rights disputes for this asset, including the committed beneficiary target.
+	"""
+	rightsProposalLinks(limit: Int, offset: Int): [MediaAssetRightsProposalLink!]
+	rightsProposals(limit: Int, offset: Int): [Proposal!]
+	rightsUpdates(limit: Int, offset: Int): [MediaAssetRightsUpdate!]
+	rightsVersion: Int!
+	usages(limit: Int, offset: Int): [MediaAssetUsage!]
+	verifiedAt: Int
+}
+
+"""
+Move `media_asset::asset_kind_*` constants.
+"""
+enum MediaAssetKind {
+	UNSPECIFIED
+	VISUAL_WORK
+	MUSICAL_COMPOSITION
+	SOUND_RECORDING
+}
+
+type MediaAssetLicenseInstance {
+	acceptedAt: Int!
+	licenseInstanceId: String!
+	licensee: String!
+	status: Int!
+	templateVersionId: String!
+}
+
+"""
+Move `media_asset::media_type_*` constants.
+"""
+enum MediaAssetMediaType {
+	UNSPECIFIED
+	IMAGE
+	VIDEO
+	AUDIO
+}
+
+"""
+Move `media_asset::originality_*` constants.
+"""
+enum MediaAssetOriginalityStatus {
+	UNRESOLVED
+	ORIGINAL
+	DERIVATIVE
+}
+
+"""
+Move `media_asset::provenance_*` constants.
+"""
+enum MediaAssetProvenanceStatus {
+	UNVERIFIED
+	VERIFIED
+}
+
+type MediaAssetRightsProposalLink {
+	claimsCommitment: String!
+	proposal: Proposal!
+	status: Int!
+	target: MediaAssetRightsTarget!
+}
+
+type MediaAssetRightsTarget {
+	beneficiaryAddress: String!
+	identityHash: String
+	identitySource: Int
+	kind: Int!
+	username: String
+	vaultId: String
+}
+
+type MediaAssetRightsUpdate {
+	mediaAssetId: String!
+	proposalId: String
+	rightsVersion: Int!
+	time: DateTime!
+	transactionId: String!
+}
+
+type MediaAssetUsage {
+	assetId: String!
+	containerId: String!
+	containerType: Int!
+	position: Int!
+	usageClass: Int!
+}
+
+type MemoryAccount {
+	accountId: String!
+	active: Boolean!
+	contractVersion: Int!
+	createdAt: Int!
+	principalOwner: MySoAddress!
+	profileId: MySoAddress!
+}
+
+type MemoryConfig {
+	"""
+	Maximum agent nesting depth allowed in a memory hierarchy.
+	"""
+	maxAgentDepth: Int!
+	"""
+	Maximum byte length accepted for a memory label.
+	"""
+	maxLabelLength: Int!
+	"""
+	Maximum byte length accepted for an organization description.
+	"""
+	maxOrgDescriptionLength: Int!
+	"""
+	Maximum byte length accepted for an organization name.
+	"""
+	maxOrgNameLength: Int!
+	"""
+	Maximum number of agentic organizations a single user may own.
+	"""
+	maxOrganizationsPerUser: Int!
+	"""
+	Cooldown (ms) between organization category updates.
+	"""
+	orgCategoryUpdateCooldownMs: Int!
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID of the last config update.
+	"""
+	transactionId: String!
+	"""
+	Last updated timestamp (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Address that last updated the configuration.
+	"""
+	updatedBy: String!
+	"""
+	Configuration version.
+	"""
+	version: Int!
+}
+
 """
 Merges `coins` into the first `coin` (produces no results).
 """
@@ -1960,6 +3250,62 @@ type MergeCoinsCommand {
 	The coins to be merged.
 	"""
 	coins: [TransactionArgument!]!
+}
+
+type MessagingAgentGroup {
+	createdAtMs: Int!
+	creatorActor: MySoAddress!
+	creatorIdentityClass: Int!
+	creatorPrincipal: MySoAddress!
+	creatorSubAgentId: String
+	groupId: String!
+	groupName: String!
+	groupUuid: String!
+	organizationId: String
+	transactionId: String!
+}
+
+type MessagingConfig {
+	"""
+	Maximum byte length accepted for a paid-message dedupe key.
+	"""
+	maxDedupeKeyBytes: Int!
+	"""
+	Minimum character count required for a paid-message reply.
+	"""
+	minReplyChars: Int!
+	"""
+	Platform fee in basis points charged on paid messages (10000 = 100%).
+	"""
+	paidMsgPlatformFeeBps: Int!
+	"""
+	Ecosystem treasury fee in basis points charged on paid messages (10000 = 100%).
+	"""
+	paidMsgTreasuryFeeBps: Int!
+	"""
+	Payment expiration window in milliseconds for paid-message escrow claims.
+	"""
+	paymentExpirationMs: Int!
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID of the last config update.
+	"""
+	transactionId: String!
+	"""
+	Last updated timestamp (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Address that last updated the configuration.
+	"""
+	updatedBy: String!
+	"""
+	Configuration version.
+	"""
+	version: Int!
 }
 
 """
@@ -2887,6 +4233,222 @@ type Mutation {
 	executeTransaction(transactionDataBcs: Base64!, signatures: [Base64!]!): ExecutionResult!
 }
 
+type MyDataAccessAnalytics {
+	"""
+	Access type.
+	"""
+	accessType: String!
+	"""
+	Day (YYYY-MM-DD).
+	"""
+	day: String!
+	"""
+	Total access events that day.
+	"""
+	totalAccesses: Int!
+	"""
+	Number of unique users that day.
+	"""
+	uniqueUsers: Int!
+}
+
+enum MyDataAccessConfigurationKind {
+	PROFILE_SUBSCRIPTION
+	MARKETPLACE_ONE_TIME
+	MARKETPLACE_RECURRING
+}
+
+type MyDataAccessLog {
+	"""
+	Epoch timestamp when access occurred.
+	"""
+	accessTime: Int!
+	"""
+	Access type ("one_time", "subscription", "grant", "preview", etc.).
+	"""
+	accessType: String!
+	"""
+	Indexer timestamp.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID.
+	"""
+	transactionId: String!
+	"""
+	User address that accessed.
+	"""
+	userAddress: MySoAddress!
+	"""
+	Profile of the user.
+	"""
+	userProfile: ProfileSummary
+}
+
+type MyDataBroadPool {
+	createdAtMs: Int!
+	eventId: String!
+	name: String!
+	platformId: MySoAddress
+	poolId: String!
+	time: DateTime!
+	transactionId: String!
+}
+
+type MyDataClaim {
+	amount: Int!
+	claimant: MySoAddress!
+	claimantProfile: ProfileSummary
+	claimedAtMs: Int!
+	"""
+	Ecosystem fee slice deducted at claim.
+	"""
+	ecosystemFee: Int!
+	eventId: String!
+	"""
+	Gross claim amount before on-chain fee deduction.
+	"""
+	grossAmount: Int!
+	id: Int!
+	"""
+	Net amount paid to claimant after fees.
+	"""
+	netAmount: Int!
+	"""
+	Platform fee slice deducted at claim.
+	"""
+	platformFee: Int!
+	"""
+	Platform treasury recipient when a platform fee was routed on-chain.
+	"""
+	platformId: MySoAddress
+	snapshotId: String!
+	time: DateTime!
+	transactionId: String!
+}
+
+type MyDataConfig {
+	defaultClaimWindowMs: Int!
+	"""
+	Whether buyers may start new broad-pool/snapshot MyData marketplace rounds.
+	Direct profile-gated, one-time, and recurring MyData access is always available.
+	"""
+	marketplaceEnabled: Boolean!
+	maxEncryptedDataBytes: Int!
+	"""
+	Maximum encryption id byte length accepted when creating a MyData record.
+	"""
+	maxEncryptionIdBytes: Int!
+	"""
+	Maximum free access grants.
+	"""
+	maxFreeAccessGrants: Int!
+	maxMerkleProofDepth: Int!
+	maxMetadataBytes: Int!
+	maxPaidAccessEntries: Int!
+	maxPaymentReferenceBytes: Int!
+	maxPoolAssignments: Int!
+	"""
+	Maximum subscription duration in days.
+	"""
+	maxSubscriptionDays: Int!
+	maxTagBytes: Int!
+	"""
+	Maximum tags per record.
+	"""
+	maxTags: Int!
+	"""
+	MyData marketplace pool claim ecosystem fee in bps (default 250 = 2.5%).
+	"""
+	mydataMarketplaceEcosystemFeeBps: Int!
+	"""
+	MyData marketplace pool claim platform fee in bps (default 250 = 2.5%).
+	"""
+	mydataMarketplacePlatformFeeBps: Int!
+	"""
+	When no platform is present, share of the platform fee bucket routed to creators (bps).
+	"""
+	nonPlatformPlatformToCreatorBps: Int!
+	"""
+	When no platform is present, share of the platform fee bucket routed to ecosystem treasury (bps).
+	"""
+	nonPlatformPlatformToTreasuryBps: Int!
+	"""
+	P2P marketplace ecosystem fee in bps (default 250 = 2.5%).
+	"""
+	p2PEcosystemFeeBps: Int!
+	"""
+	P2P marketplace platform fee in bps (default 250 = 2.5%).
+	"""
+	p2PPlatformFeeBps: Int!
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID of the last config update.
+	"""
+	transactionId: String!
+	"""
+	Last updated timestamp (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Address that last updated the configuration.
+	"""
+	updatedBy: String!
+	"""
+	Configuration version.
+	"""
+	version: Int!
+}
+
+type MyDataDailyRevenue {
+	"""
+	Revenue for that day.
+	"""
+	dailyRevenue: Int!
+	"""
+	Number of transactions that day.
+	"""
+	dailyTransactions: Int!
+	"""
+	Day (YYYY-MM-DD).
+	"""
+	day: String!
+}
+
+type MyDataDistributionRound {
+	claimDeadlineMs: Int!
+	contributorCount: Int!
+	eventId: String!
+	merkleRoot: String!
+	platformId: MySoAddress
+	publishedAtMs: Int!
+	snapshotId: String!
+	time: DateTime!
+	totalAmount: Int!
+	transactionId: String!
+}
+
+type MyDataListingSubPool {
+	assignedAtMs: Int!
+	eventId: String!
+	listingId: String!
+	subPoolId: String!
+	time: DateTime!
+	transactionId: String!
+}
+
+type MyDataMerkleRoot {
+	eventId: String!
+	publishedAtMs: Int!
+	rootHash: String!
+	snapshotId: String!
+	time: DateTime!
+	transactionId: String!
+}
+
 type MyDataPurchase {
 	"""
 	Buyer address.
@@ -2897,11 +4459,27 @@ type MyDataPurchase {
 	"""
 	buyerProfile: ProfileSummary
 	"""
+	Net amount credited to listing owner after fees.
+	"""
+	creatorAmount: Int!
+	"""
+	Ecosystem fee slice deducted from gross payment.
+	"""
+	ecosystemFee: Int!
+	"""
 	MyData record ID this purchase is for.
 	"""
 	mydataId: String!
 	"""
-	Price paid.
+	Platform fee slice deducted from gross payment.
+	"""
+	platformFee: Int!
+	"""
+	Platform treasury recipient when a platform fee was routed on-chain.
+	"""
+	platformId: MySoAddress
+	"""
+	Price paid (gross).
 	"""
 	price: Int!
 	"""
@@ -2913,12 +4491,64 @@ type MyDataPurchase {
 	"""
 	purchaseType: String!
 	"""
+	Whether this purchase access has been revoked by the owner.
+	"""
+	revoked: Boolean!
+	"""
+	Epoch ms when access was revoked, if applicable.
+	"""
+	revokedAt: Int
+	"""
+	Address that revoked access, if applicable.
+	"""
+	revokedBy: MySoAddress
+	"""
+	Indexer timestamp when the purchase was recorded.
+	"""
+	time: DateTime!
+	"""
 	Transaction ID.
 	"""
 	transactionId: String!
 }
 
 type MyDataRecord {
+	"""
+	Access analytics for this MyData record.
+	"""
+	accessAnalytics: [MyDataAccessAnalytics!]
+	"""
+	Mutually exclusive access configuration for this MyData listing.
+	"""
+	accessConfiguration: MyDataAccessConfigurationKind!
+	"""
+	Access logs for this MyData record (paginated).
+	"""
+	accessLogs(limit: Int, offset: Int): [MyDataAccessLog!]
+	"""
+	How the dataset was collected (e.g. "cli", "automated").
+	"""
+	collectionMethod: String
+	"""
+	Epoch timestamp when the record was created.
+	"""
+	createdAt: Int!
+	"""
+	Data quality indicator ("high", "medium", "low").
+	"""
+	dataQuality: String
+	"""
+	Geographic region for the data.
+	"""
+	geographicRegion: String
+	"""
+	Whether this data updates over time.
+	"""
+	isUpdating: Boolean!
+	"""
+	Epoch timestamp when the record was last updated.
+	"""
+	lastUpdated: Int!
 	"""
 	Media type (e.g. "text", "audio", "image", "video").
 	"""
@@ -2940,13 +4570,227 @@ type MyDataRecord {
 	"""
 	ownerProfile: ProfileSummary
 	"""
+	Platform details when `platform_id` is set and indexed.
+	"""
+	platform: Platform
+	"""
+	Optional platform identification.
+	"""
+	platformId: String
+	"""
+	Purchases for this MyData record (paginated).
+	"""
+	purchases(limit: Int, offset: Int): [MyDataPurchase!]
+	"""
+	Revenue entries for this MyData record (paginated).
+	"""
+	revenue(limit: Int, offset: Int): [MyDataRevenue!]
+	"""
+	Daily revenue timeline for this MyData record.
+	"""
+	revenueTimeline: [MyDataDailyRevenue!]
+	"""
+	Sample size for the dataset.
+	"""
+	sampleSize: Int
+	"""
+	Aggregated stats for this MyData record.
+	"""
+	stats: MyDataStats
+	"""
+	Query-marketplace sub-pools this listing is assigned to (from `MyDataAssignedToSubPoolEvent`).
+	"""
+	subPools(limit: Int, offset: Int): [MyDataSubPool!]
+	"""
+	Subscription duration in days.
+	"""
+	subscriptionDurationDays: Int!
+	"""
 	Subscription price (null if not for sale).
 	"""
 	subscriptionPrice: Int
 	"""
+	Subscriptions for this MyData record (paginated).
+	"""
+	subscriptions(limit: Int, offset: Int): [MyDataSubscription!]
+	"""
 	Searchable tags.
 	"""
 	tags: [String!]!
+	"""
+	End timestamp for time-range data (null if not applicable).
+	"""
+	timestampEnd: Int
+	"""
+	Start timestamp for time-range data.
+	"""
+	timestampStart: Int!
+	"""
+	Update frequency (e.g. "daily", "weekly", "monthly").
+	"""
+	updateFrequency: String
+	"""
+	On-chain contract version for this MyData record object.
+	"""
+	version: Int!
+}
+
+type MyDataRevenue {
+	"""
+	Amount (gross).
+	"""
+	amount: Int!
+	"""
+	Net amount credited to listing owner after fees.
+	"""
+	creatorAmount: Int!
+	"""
+	Ecosystem fee slice deducted from gross payment.
+	"""
+	ecosystemFee: Int!
+	"""
+	Address that paid (from).
+	"""
+	fromAddress: MySoAddress!
+	"""
+	Platform fee slice deducted from gross payment.
+	"""
+	platformFee: Int!
+	"""
+	Platform treasury recipient when a platform fee was routed on-chain.
+	"""
+	platformId: MySoAddress
+	"""
+	Epoch timestamp when the revenue was recorded.
+	"""
+	revenueTime: Int!
+	"""
+	Revenue type ("one_time", "subscription", "grant").
+	"""
+	revenueType: String!
+	"""
+	Indexer timestamp.
+	"""
+	time: DateTime!
+	"""
+	Address that received (to).
+	"""
+	toAddress: MySoAddress!
+	"""
+	Transaction ID.
+	"""
+	transactionId: String!
+}
+
+type MyDataSnapshotAnchor {
+	buyer: MySoAddress!
+	buyerProfile: ProfileSummary
+	createdAtMs: Int!
+	eventId: String!
+	id: Int!
+	initialEscrow: Int!
+	manifestHash: String
+	paymentReference: String
+	platformId: MySoAddress
+	pricePaid: Int!
+	snapshotId: String!
+	sourcePoolId: String!
+	sourceSubPoolId: String!
+	time: DateTime!
+	transactionId: String!
+}
+
+type MyDataSnapshotEscrow {
+	claimDeadlineMs: Int
+	reclaimedAtMs: Int
+	remainingAmount: Int!
+	snapshotId: String!
+	status: String!
+	time: DateTime!
+	totalClaimed: Int!
+	totalFunded: Int!
+	transactionId: String!
+	updatedAtMs: Int!
+}
+
+type MyDataStats {
+	"""
+	Number of access events.
+	"""
+	accessCount: Int!
+	"""
+	Epoch timestamp when the record was created.
+	"""
+	createdAt: Int!
+	"""
+	Epoch timestamp when the record was last updated.
+	"""
+	lastUpdated: Int!
+	"""
+	Number of one-time purchases.
+	"""
+	purchaseCount: Int!
+	"""
+	Number of active subscriptions.
+	"""
+	subscriptionCount: Int!
+	"""
+	Total revenue for this record.
+	"""
+	totalRevenue: Int!
+}
+
+type MyDataSubPool {
+	broadPoolId: String!
+	createdAtMs: Int!
+	eventId: String!
+	name: String!
+	subPoolId: String!
+	time: DateTime!
+	transactionId: String!
+}
+
+type MyDataSubscription {
+	"""
+	Price paid.
+	"""
+	price: Int!
+	"""
+	Whether this subscription access has been revoked by the owner.
+	"""
+	revoked: Boolean!
+	"""
+	Epoch ms when access was revoked, if applicable.
+	"""
+	revokedAt: Int
+	"""
+	Address that revoked access, if applicable.
+	"""
+	revokedBy: MySoAddress
+	"""
+	Subscriber address.
+	"""
+	subscriber: MySoAddress!
+	"""
+	Profile of the subscriber.
+	"""
+	subscriberProfile: ProfileSummary
+	"""
+	Subscription end timestamp (epoch).
+	"""
+	subscriptionEnd: Int!
+	"""
+	Subscription start timestamp (epoch).
+	"""
+	subscriptionStart: Int!
+	"""
+	Indexer timestamp when the subscription was recorded.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID.
+	"""
+	transactionId: String!
 }
 
 """
@@ -2962,6 +4806,67 @@ interface Node {
 	The node's globally unique identifier, which can be passed to `Query.node` to refetch it.
 	"""
 	id: ID!
+}
+
+type NominatedDelegate {
+	"""
+	Nominee address.
+	"""
+	address: MySoAddress!
+	blockedBySubject: Boolean
+	blockedByViewer: Boolean
+	"""
+	Nomination cycle. Ratings and rejection ballots from another cycle are not current.
+	"""
+	cycleId: Int!
+	"""
+	Downvotes (nominee ratings).
+	"""
+	downvotes: Int!
+	"""
+	On-chain `GovernanceDAO` object id for this nominee row's registry instance.
+	"""
+	governanceRegistryId: String!
+	"""
+	Nomination time (epoch ms).
+	"""
+	nominationTime: Int!
+	"""
+	Registry type (0=ecosystem, 1=proof of creativity, 2=SPoT, 3=platform).
+	"""
+	registryType: Int!
+	"""
+	Seated delegates who currently reject this nominee for this registry and cycle.
+	"""
+	rejectionVotes: [NomineeRejectionVote!]
+	"""
+	Scheduled term start epoch (when elected).
+	"""
+	scheduledTermStartEpoch: Int!
+	"""
+	Status (0=Pending, 1=Elected, 2=Rejected).
+	"""
+	status: Int!
+	"""
+	Profile of the nominee.
+	"""
+	submitterProfile: ProfileSummary
+	"""
+	Upvotes (nominee ratings).
+	"""
+	upvotes: Int!
+	viewerFollowsViewer: Boolean
+	viewerIsFollowing: Boolean
+	"""
+	The viewer's latest nominee rating when `viewer` was set on `nominatedDelegates`.
+	`CLEARED` means the viewer removed their vote; aggregate counts may still reflect prior activity.
+	"""
+	viewerRatingVoteKind: DelegateRatingVoteKind
+}
+
+type NomineeRejectionVote {
+	cycleId: Int!
+	delegateAddress: String!
 }
 
 """
@@ -3284,6 +5189,95 @@ type OpenMoveTypeSignatureBody =
 """
 scalar OpenMoveTypeSignature
 
+type OrgInvitation {
+	createdAtMs: BigInt!
+	expiresAtMs: BigInt
+	grantedMask: BigInt
+	invitedBy: MySoAddress!
+	inviteeAddress: MySoAddress!
+	permissionsMask: BigInt!
+	respondedAtMs: BigInt
+	respondedBy: MySoAddress
+	roleName: String
+	status: String!
+}
+
+type OrgMemoryPermission {
+	active: Boolean!
+	grantedAt: DateTime!
+	grantedBy: MySoAddress!
+	memberAddress: MySoAddress!
+	permissionKind: BigInt!
+}
+
+type OrgRole {
+	definedBy: MySoAddress!
+	isBuiltin: Boolean!
+	mask: BigInt!
+	roleName: String!
+}
+
+type OrgRoleAssignment {
+	active: Boolean!
+	assignedAtMs: BigInt!
+	assignedBy: MySoAddress!
+	assignedMask: BigInt!
+	memberAddress: MySoAddress!
+	roleName: String!
+}
+
+type OrgTreasuryAccess {
+	grantedAtMs: Int!
+	grantedBy: MySoAddress!
+	recipient: MySoAddress!
+}
+
+type OrgTreasuryBalance {
+	balance: BigInt!
+	coinType: String!
+	updatedAtMs: Int!
+}
+
+type OrganizationCategory {
+	displayName: String!
+	slug: String!
+	value: Int!
+}
+
+enum OrganizationLeaderboardSort {
+	HIGHEST_NET_CASH_FLOW
+	FASTEST_GROWING
+	HIGHEST_ACCURACY
+	MOST_ACTIVE
+	HIGHEST_REVENUE
+	LARGEST_ESTIMATED_AUM
+}
+
+enum OrganizationStatsWindow {
+	ALL
+	DAYS_7
+	DAYS_30
+	DAYS_180
+	DAYS_365
+}
+
+enum OrganizationType {
+	COMPANY
+	STARTUP
+	INVESTMENT_FUND
+	NONPROFIT
+	RESEARCH
+	GOVERNMENT
+	MEDIA
+	STEWARDSHIP
+	BRAND
+	COMMUNITY
+	SPORTS
+	EDUCATION
+	HEALTHCARE
+	OTHER
+}
+
 """
 Placeholder for unimplemented command types
 """
@@ -3292,6 +5286,12 @@ type OtherCommand {
 	Placeholder field for unimplemented commands
 	"""
 	_: Boolean
+}
+
+type OverallReputation {
+	confidenceBps: Int!
+	score: Float!
+	scoreMilli: Int!
 }
 
 """
@@ -3386,6 +5386,31 @@ type PageInfo {
 	startCursor: String
 }
 
+type PaidMessageEscrow {
+	amount: Int!
+	claimedAtMs: Int
+	createdAtMs: Int!
+	groupId: String!
+	netAmount: Int
+	payer: MySoAddress!
+	payerProfile: ProfileSummary
+	platformFee: Int
+	recipient: MySoAddress!
+	recipientProfile: ProfileSummary
+	refundedAtMs: Int
+	seq: Int!
+	status: PaidMessageEscrowStatus!
+	transactionId: String!
+	treasuryFee: Int
+}
+
+enum PaidMessageEscrowStatus {
+	ESCROWED
+	CLAIMED
+	SETTLED
+	REFUNDED
+}
+
 type PerEpochConfig {
 	"""
 	The per-epoch configuration object as of when the transaction was executed.
@@ -3395,13 +5420,21 @@ type PerEpochConfig {
 
 type Platform implements Node {
 	"""
+	Shared platform badge ledger object id.
+	"""
+	badgeLedgerId: String
+	"""
 	Wallets blocked by this platform (paginated).
 	"""
 	blockedProfiles(limit: Int, offset: Int): [PlatformBlockedProfileSummary!]
 	"""
-	When the platform was created (ISO 8601).
+	URL to the platform cover photo.
 	"""
-	createdAt: String!
+	coverPhoto: String
+	"""
+	When the platform was created (epoch milliseconds).
+	"""
+	createdAt: Int!
 	"""
 	Delegate count for governance.
 	"""
@@ -3447,17 +5480,21 @@ type Platform implements Node {
 	"""
 	maxVotesPerUser: Int
 	"""
+	Screenshot and video preview URLs (JSON array).
+	"""
+	mediaPreviews: JSON
+	"""
 	Members of this platform (paginated).
 	"""
 	members(limit: Int, offset: Int): [PlatformMemberSummary!]
 	"""
-	Min on-chain age in days.
-	"""
-	minOnChainAgeDays: Int
-	"""
 	Moderators of this platform (paginated).
 	"""
-	moderators(limit: Int, offset: Int): [PlatformModeratorSummary!]
+	moderators(permission: String, limit: Int, offset: Int): [PlatformModeratorSummary!]
+	"""
+	Derived PermissionedGroup object id for platform moderators.
+	"""
+	moderatorsGroupId: String
 	"""
 	The platform name.
 	"""
@@ -3491,6 +5528,10 @@ type Platform implements Node {
 	"""
 	quorumVotes: Int
 	"""
+	Optional OAuth redirect URI for the platform.
+	"""
+	redirectUri: String
+	"""
 	Release date.
 	"""
 	releaseDate: String
@@ -3515,13 +5556,29 @@ type Platform implements Node {
 	"""
 	termsOfService: String
 	"""
-	Treasury balance.
+	Indexed treasury balance for one coin type.
 	"""
-	treasury: Int
+	treasuryBalance(coinType: String!): UInt53
 	"""
-	When the platform was last updated (ISO 8601).
+	Live bag balance for one coin type (RPC read of `treasury_balances`).
 	"""
-	updatedAt: String!
+	treasuryBalanceLive(coinType: String!): UInt53
+	"""
+	Indexed multi-asset platform treasury holdings.
+	"""
+	treasuryBalances: [PlatformTreasuryBalance!]!
+	"""
+	Paginated platform treasury withdrawals.
+	"""
+	treasuryWithdrawals(limit: Int, offset: Int): [PlatformTreasuryWithdrawalSummary!]
+	"""
+	When the platform was last updated (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Member, platform-block, and moderator flags for a wallet (single DB round-trip).
+	"""
+	userAccess(user: MySoAddress!): PlatformUserAccess
 	"""
 	Voting period epochs.
 	"""
@@ -3534,7 +5591,7 @@ type Platform implements Node {
 
 type PlatformBlockedProfileSummary {
 	blockedBy: String!
-	createdAt: String!
+	createdAt: Int!
 	"""
 	Profile of the blocked user.
 	"""
@@ -3542,8 +5599,51 @@ type PlatformBlockedProfileSummary {
 	walletAddress: MySoAddress!
 }
 
+type PlatformConfig {
+	"""
+	Maximum byte length accepted for a platform badge description.
+	"""
+	maxBadgeDescriptionLength: Int!
+	"""
+	Maximum byte length accepted for a platform badge name.
+	"""
+	maxBadgeNameLength: Int!
+	"""
+	Maximum byte length accepted for a platform cover photo URL.
+	"""
+	maxCoverPhotoUrlLength: Int!
+	"""
+	Maximum number of media previews allowed on a platform.
+	"""
+	maxMediaPreviews: Int!
+	"""
+	Maximum reasoning text length accepted for platform-level submissions.
+	"""
+	maxReasoningLength: Int!
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID of the last config update.
+	"""
+	transactionId: String!
+	"""
+	Last updated timestamp (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Address that last updated the configuration.
+	"""
+	updatedBy: String!
+	"""
+	Configuration version.
+	"""
+	version: Int!
+}
+
 type PlatformMemberSummary {
-	joinedAt: String!
+	joinedAt: Int!
 	"""
 	Profile of the platform member.
 	"""
@@ -3551,11 +5651,98 @@ type PlatformMemberSummary {
 	walletAddress: MySoAddress!
 }
 
+type PlatformMembershipPage {
+	items: [PlatformMembershipSummary!]!
+	limit: Int!
+	offset: Int!
+	totalCount: Int!
+	"""
+	Total pages for this `limit` (0 when there are no memberships).
+	"""
+	totalPages: Int!
+}
+
 type PlatformMembershipSummary {
+	approvalChangedAt: Int
+	approvedBy: String
+	blockedProfilesCount: Int!
+	coverPhoto: String
+	"""
+	When the platform row was created (epoch ms).
+	"""
+	createdAt: Int!
+	delegateCount: Int
+	delegateTermEpochs: Int
+	"""
+	Present when the platform is soft-deleted (epoch ms).
+	"""
+	deletedAt: Int
+	description: String
+	developerAddress: String!
+	"""
+	Profile of the platform developer (optional; loads via social reader when selected).
+	"""
+	developerProfile: ProfileSummary
+	"""
+	First time this wallet joined the platform (unchanged by rejoins), unix ms.
+	"""
+	firstJoinedAt: Int!
+	governanceRegistryId: String
 	isApproved: Boolean!
-	joinedAt: String!
+	"""
+	When this wallet joined the platform (epoch ms).
+	"""
+	joinedAt: Int!
+	"""
+	External links (JSON array in DB).
+	"""
+	links: JSON
+	logo: String
+	maxVotesPerUser: Int
+	mediaPreviews: JSON
+	"""
+	`platform_memberships` row id (stable for this wallet+platform join record).
+	"""
+	membershipId: Int!
+	moderatorCount: Int!
 	name: String!
+	"""
+	Surrogate key from the `platforms` table.
+	"""
+	platformDbId: Int!
 	platformId: String!
+	"""
+	Alternate names / labels (JSON array in the DB `platforms` column).
+	"""
+	platformNames: JSON
+	primaryCategory: String!
+	privacyPolicy: String
+	proposalSubmissionCost: Int
+	quadraticBaseCost: Int
+	quorumVotes: Int
+	redirectUri: String
+	releaseDate: String
+	secondaryCategory: String
+	shutdownDate: String
+	"""
+	Platform status code (indexer contract): 0=Development, 1=Alpha, 2=Beta, 3=Live, 4=Maintenance, 5=Sunset, 6=Shutdown.
+	"""
+	status: Int!
+	statusText: String!
+	tagline: String!
+	termsOfService: String
+	"""
+	Embedded platform treasury balance lives on the Platform object itself.
+	Query `platform(id).treasuryBalance` for the indexed balance.
+	"""
+	treasuryContainerId: String!
+	"""
+	When the platform row was last updated (epoch ms).
+	"""
+	updatedAt: Int!
+	version: Int
+	votingPeriodEpochs: Int
+	wantsDaoGovernance: Boolean
 }
 
 type PlatformModeratorSummary {
@@ -3564,15 +5751,531 @@ type PlatformModeratorSummary {
 	Profile of the user who added the moderator.
 	"""
 	addedByProfile: ProfileSummary
-	createdAt: String!
+	createdAt: Int!
 	moderatorAddress: MySoAddress!
 	"""
 	Profile of the moderator.
 	"""
 	moderatorProfile: ProfileSummary
+	permissions: [String!]!
+}
+
+type PlatformRevenueSummary {
+	"""
+	Active months count.
+	"""
+	activeMonths: Int!
+	"""
+	Average transaction amount.
+	"""
+	avgTransactionAmount: Float!
+	"""
+	Last active month (ISO date string).
+	"""
+	lastActiveMonth: String
+	"""
+	Platform address (object ID).
+	"""
+	platformAddress: String!
+	"""
+	Total creators count.
+	"""
+	totalCreators: Int!
+	"""
+	Paid messaging revenue (12-month).
+	"""
+	totalMessagingRevenue: Int!
+	"""
+	MyData revenue (12-month).
+	"""
+	totalMydataRevenue: Int!
+	"""
+	Total payers count.
+	"""
+	totalPayers: Int!
+	"""
+	Total revenue (12-month).
+	"""
+	totalRevenue: Int!
+	"""
+	SPT revenue (12-month).
+	"""
+	totalSptRevenue: Int!
+	"""
+	Subscription revenue (12-month).
+	"""
+	totalSubscriptionRevenue: Int!
+	"""
+	Total transactions (12-month).
+	"""
+	totalTransactions: Int!
+}
+
+type PlatformTreasuryBalance {
+	balance: UInt53!
+	coinType: String!
+	lastFundedAt: UInt53
+	lastWithdrawnAt: UInt53
+}
+
+type PlatformTreasuryWithdrawalSummary {
+	amount: UInt53!
+	coinType: String!
+	executedBy: String!
+	platformId: String!
+	reasonCode: Int!
+	recipient: String!
+	timestamp: UInt53!
+}
+
+type PlatformUserAccess {
+	canBlockUsers: Boolean!
+	canManageBadges: Boolean!
+	canManagePromotions: Boolean!
+	canModerateContent: Boolean!
+	canWithdrawFromPlatformTreasury: Boolean!
+	"""
+	Whether the platform has blocked this wallet.
+	"""
+	isBlocked: Boolean!
+	"""
+	Whether the wallet is a member of this platform.
+	"""
+	isMember: Boolean!
+	"""
+	Whether the wallet is a moderator of this platform.
+	"""
+	isModerator: Boolean!
+	"""
+	Active granular moderator permissions for this wallet.
+	"""
+	moderatorPermissions: [String!]!
+}
+
+type PlaybackPolicy {
+	audioMuted: Boolean!
+	videoRestricted: Boolean!
+}
+
+type PocAnalysisResult {
+	"""
+	When the analysis was performed (epoch milliseconds).
+	"""
+	analysisTimestamp: Int!
+	"""
+	Structured evidence URLs from analysis (indexed row — parallels `Post.pocEvidenceUrls`).
+	"""
+	evidenceUrls: JSON
+	"""
+	Highest similarity score from the analysis (0-100).
+	"""
+	highestSimilarityScore: Int!
+	"""
+	Media type analyzed (1=image, 2=video, 3=audio).
+	"""
+	mediaType: Int!
+	"""
+	Address of the oracle that performed the analysis.
+	"""
+	oracleAddress: String!
+	"""
+	Address of the original creator if similarity was detected.
+	"""
+	originalCreator: String
+	"""
+	Post ID that was analyzed.
+	"""
+	postId: String!
+	"""
+	Oracle reasoning captured on submission (indexed row — same provenance as `Post.pocReasoning`).
+	"""
+	reasoning: String
+	"""
+	Whether similarity to existing content was detected.
+	"""
+	similarityDetected: Boolean!
+}
+
+type PocBeneficiaryVault {
+	"""
+	Deprecated alias for [`vault_routing_key`](Self::vault_routing_key).
+	"""
+	beneficiary: MySoAddress!
+	claims(limit: Int, offset: Int): [PocVaultClaim!]
+	"""
+	Non-zero per-coin-type balances (excludes legacy aggregate sentinel).
+	"""
+	coinBalances: [PocVaultCoinBalance!]
+	deposits(limit: Int, offset: Int): [PocVaultDeposit!]
+	pocUsernameBeneficiary: PocUsernameBeneficiary
+	transactionId: String!
+	"""
+	Last indexer touch (epoch milliseconds).
+	"""
+	updatedAtMs: Int!
+	"""
+	On-chain vault object address.
+	"""
+	vaultId: String!
+	"""
+	Vault directory lookup key stored on-chain as `PoCBeneficiaryVault.beneficiary`.
+	"""
+	vaultRoutingKey: MySoAddress!
+}
+
+type PocConfig {
+	"""
+	Similarity threshold for audio content (0-100).
+	"""
+	audioThreshold: Int!
+	claimTreasuryFeeBps: Int!
+	"""
+	Cost to submit a dispute.
+	"""
+	disputeCost: Int!
+	"""
+	Shared PoC GovernanceDAO object ID (registry_type = 1).
+	"""
+	disputeGovernanceRegistryId: String
+	"""
+	Minimum aggregate voting stake (`uphold` + `overturn`) required for a full resolution on round 1; `0` disables the quorum gate.
+	"""
+	disputeQuorumBaseStake: Int!
+	"""
+	Fee multiplier (basis points) applied only when opening the second dispute; must be at least `10000`.
+	"""
+	disputeSecondRoundFeeMultiplierBps: Int!
+	"""
+	Quorum multiplier (basis points) applied to `dispute_quorum_base_stake` only on round 2.
+	"""
+	disputeSecondRoundQuorumMultiplierBps: Int!
+	"""
+	Similarity threshold for image content (0-100).
+	"""
+	imageThreshold: Int!
+	"""
+	Lifetime cap on rights governance disputes per media asset.
+	"""
+	maxDisputesPerMediaAsset: Int!
+	"""
+	Maximum number of disputes allowed per post.
+	"""
+	maxDisputesPerPost: Int!
+	"""
+	Max bps any embedded source asset may redirect from a post revenue pool (0-10000).
+	"""
+	maxEmbeddedAssetRedirectBps: Int!
+	"""
+	Max evidence URLs per submission.
+	"""
+	maxEvidenceUrls: Int!
+	"""
+	Max length of reasoning text allowed in PoC flows.
+	"""
+	maxReasoningLength: Int!
+	maxReferralBps: Int!
+	"""
+	Maximum stake per vote on a dispute (MYSO base units).
+	"""
+	maxVoteStake: Int!
+	"""
+	Max votes allowed per dispute.
+	"""
+	maxVotesPerDispute: Int!
+	"""
+	Treasury fee for initiating a media-asset rights governance dispute (MYSO base units).
+	"""
+	mediaAssetDisputeCost: Int!
+	"""
+	Minimum vault deposit amount required to submit a dispute (MYSO base units).
+	"""
+	minVaultDepositAmount: Int!
+	"""
+	Minimum stake per vote on a dispute (MYSO base units).
+	"""
+	minVoteStake: Int!
+	"""
+	Oracle address used for verification.
+	"""
+	oracleAddress: String
+	"""
+	Revenue redirect percentage when similarity detected.
+	"""
+	revenueRedirectPercentage: Int!
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID of the last config update.
+	"""
+	transactionId: String!
+	"""
+	Last updated timestamp (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Address that last updated PoC configuration.
+	"""
+	updatedBy: String!
+	"""
+	One-time join-referral fee (bps) on first username-beneficiary vault claim.
+	"""
+	usernameBeneficiaryJoinReferralBps: Int!
+	"""
+	Configuration version.
+	"""
+	version: Int!
+	"""
+	Max redirect ceiling (bps) when only embedded audio matches on a VIDEO post (on-chain delta ramp applies).
+	"""
+	videoEmbeddedAudioRedirectBps: Int!
+	"""
+	Similarity threshold for video content (0-100).
+	"""
+	videoThreshold: Int!
+	"""
+	Voting period for disputes (milliseconds).
+	"""
+	votingDurationMs: Int!
+}
+
+type PocDispute {
+	"""
+	Dispute ID.
+	"""
+	disputeId: String!
+	"""
+	Round when opened (`1` or `2`).
+	"""
+	disputeRound: Int!
+	"""
+	Dispute type (1=challenge badge, 2=challenge redirection).
+	"""
+	disputeType: Int!
+	"""
+	Address of the disputer.
+	"""
+	disputer: MySoAddress!
+	"""
+	Profile of the disputer.
+	"""
+	disputerProfile: ProfileSummary
+	"""
+	Effective dispute fee charged for this round (MYSO base units).
+	"""
+	effectiveDisputeFee: Int!
+	"""
+	Evidence submitted by the disputer.
+	"""
+	evidence: String!
+	"""
+	Post ID being disputed.
+	"""
+	postId: String!
+	"""
+	Whether total vote stake met the quorum threshold when resolved; absent until resolved.
+	"""
+	quorumMet: Boolean
+	"""
+	Minimum total voting stake required for resolution when the dispute opened (MYSO base units).
+	"""
+	requiredTotalStakeQuorum: Int!
+	"""
+	Resolution outcome code when resolved (from `PoCDisputeResolvedEvent`).
+	"""
+	resolution: Int
+	"""
+	When the dispute was resolved (epoch milliseconds), if resolved.
+	"""
+	resolvedAt: Int
+	"""
+	Stake amount (dispute fee) paid when opening the dispute.
+	"""
+	stakeAmount: Int!
+	"""
+	Status (1=voting, 2=resolved upheld, 3=resolved overturned).
+	"""
+	status: Int!
+	"""
+	When the dispute was submitted (epoch milliseconds).
+	"""
+	submittedAt: Int!
+	"""
+	Aggregate stake on the losing side when resolved.
+	"""
+	totalLosingStake: Int
+	"""
+	Aggregate stake on the winning side when resolved.
+	"""
+	totalWinningStake: Int
+	"""
+	Votes cast on this dispute (latest row per voter).
+	"""
+	votes(limit: Int, offset: Int): [PocDisputeVote!]
+	"""
+	Voting window end (milliseconds).
+	"""
+	votingEndMs: Int!
+	"""
+	Voting window start (milliseconds).
+	"""
+	votingStartMs: Int!
+	"""
+	Winning vote side when resolved (`VOTE_UPHOLD` / `VOTE_OVERTURN`).
+	"""
+	winningSide: Int
+}
+
+type PocDisputeVote {
+	disputeId: String!
+	rewardAmount: Int
+	rewardClaimed: Boolean
+	stakeAmount: Int!
+	"""
+	Vote choice (`VOTE_UPHOLD` / `VOTE_OVERTURN`).
+	"""
+	voteChoice: Int!
+	votedAt: Int!
+	voter: MySoAddress!
+	voterProfile: ProfileSummary
+}
+
+type PocRevenueRedirection {
+	"""
+	Post ID accused of being derivative (receiving redirected revenue).
+	"""
+	accusedPostId: String!
+	"""
+	When the redirection was created (epoch milliseconds).
+	"""
+	createdAt: Int!
+	"""
+	Original post ID that receives the redirected revenue.
+	"""
+	originalPostId: String!
+	"""
+	Percentage of revenue redirected to the original creator.
+	"""
+	redirectPercentage: Int!
+	"""
+	Redirection ID.
+	"""
+	redirectionId: String!
+	"""
+	Similarity score from the analysis (0-100).
+	"""
+	similarityScore: Int!
+}
+
+type PocUsernameBeneficiary {
+	"""
+	Deprecated alias for [`vault_routing_key`](Self::vault_routing_key).
+	"""
+	beneficiaryAddress: String!
+	beneficiaryId: String!
+	claimedAtMs: Int
+	"""
+	The PoC oracle that sent the claim transaction (not the creator).
+	"""
+	claimedBy: String
+	claimedProfileId: String
+	creatorIdentityHash: String!
+	creatorIdentitySource: Int!
+	endReasonCode: Int
+	endedAtMs: Int
+	endedBy: String
+	joinReferralPaid: Boolean!
+	joinReferralPaidAtMs: Int
+	joinReferrer: String
+	"""
+	The creator's recipient wallet recorded at claim. Vault access keys off this.
+	"""
+	linkedWallet: String
+	oracleEvidenceHash: String!
+	pocBeneficiaryVault: PocBeneficiaryVault
+	provisionedAtMs: Int!
+	provisionedBy: String!
+	requiredXHandle: String!
+	"""
+	Wallet the username is reserved for (claim found an existing profile) until it
+	adopts or releases it.
+	"""
+	reservedFor: String
+	"""
+	1=active, 2=claimed, 3=ended.
+	"""
+	status: Int!
+	transactionId: String!
+	username: String!
+	vaultId: String!
+	"""
+	Identity-derived vault directory lookup key (not a user wallet).
+	"""
+	vaultRoutingKey: String!
+}
+
+type PocVaultClaim {
+	"""
+	Deprecated alias for [`vault_routing_key`](Self::vault_routing_key).
+	"""
+	beneficiary: MySoAddress!
+	beneficiaryAmount: Int!
+	coinType: String!
+	"""
+	Full claim size in base units (`treasury + referrer + beneficiary`).
+	"""
+	grossAmount: Int!
+	id: Int!
+	occurredAtMs: Int!
+	referrer: MySoAddress
+	referrerAmount: Int!
+	transactionId: String!
+	treasuryAmount: Int!
+	vaultId: String!
+	vaultRoutingKey: MySoAddress!
+}
+
+type PocVaultCoinBalance {
+	balance: Int!
+	coinType: String!
+	updatedAtMs: Int!
+	vaultId: String!
+}
+
+type PocVaultDeposit {
+	amount: Int!
+	"""
+	Deprecated alias for [`vault_routing_key`](Self::vault_routing_key).
+	"""
+	beneficiary: MySoAddress!
+	coinType: String!
+	id: Int!
+	occurredAtMs: Int!
+	sourcePostId: String
+	transactionId: String!
+	vaultId: String!
+	vaultRoutingKey: MySoAddress!
 }
 
 type Post implements Node {
+	"""
+	Content access model for this post.
+	"""
+	access: PostAccess!
+	"""
+	How many purchases unlocked this post.
+	"""
+	accessPurchaseCount: Int
+	"""
+	MyData purchases that unlocked this gated post, newest first. Pass `buyer` to check one
+	wallet. Price and fees are on the MyData purchase.
+	"""
+	accessPurchases(buyer: MySoAddress, limit: Int, offset: Int): [PostAccessPurchase!]
+	"""
+	Actor vs principal attribution for delegated sub-agent actions.
+	"""
+	attribution: SocialAttribution!
 	"""
 	Number of comments.
 	"""
@@ -3582,17 +6285,53 @@ type Post implements Node {
 	"""
 	comments(limit: Int, offset: Int): [CommentSummary!]
 	"""
+	Latest composition analysis sidecar for this post.
+	"""
+	compositionAnalysis: CompositionAnalysis
+	"""
+	Composition verification status (0=none, 1=pending, 2=verified, 3=invalid, 4=partially_restricted).
+	"""
+	compositionStatus: PostCompositionStatus
+	"""
 	The post content.
 	"""
 	content: String!
+	"""
+	On-chain contract version for this post object.
+	"""
+	contractVersion: Int!
 	"""
 	When the post was created (Unix timestamp in milliseconds).
 	"""
 	createdAt: Int!
 	"""
+	Deletion events for this post (paginated, newest first).
+	"""
+	deletionEvents(limit: Int, offset: Int): [PostDeletionEvent!]
+	"""
+	Embedded media asset bindings detected in this post's composition.
+	"""
+	embeddedBindings: [EmbeddedAssetBinding!]
+	"""
+	Whether Social Proof Token (SPT) features are enabled for this post.
+	"""
+	enableSpt: Boolean!
+	"""
+	Encrypted content hash when the post is paywalled / encrypted.
+	"""
+	encryptedContentHash: String
+	"""
 	The post's globally unique identifier.
 	"""
 	id: ID!
+	"""
+	Canonical MediaAsset object ids referenced by this post.
+	"""
+	mediaAssetIds: JSON
+	"""
+	Resolved MediaAsset records for ids indexed on this post.
+	"""
+	mediaAssets: [MediaAsset!]
 	"""
 	Media URLs (JSON array).
 	"""
@@ -3601,6 +6340,30 @@ type Post implements Node {
 	Mentions (JSON).
 	"""
 	mentions: JSON
+	"""
+	Optional post metadata JSON.
+	"""
+	metadataJson: JSON
+	"""
+	Platform moderation actions on this post (paginated, newest first).
+	"""
+	moderationEvents(limit: Int, offset: Int): [PostModerationEvent!]
+	"""
+	Monetization eligibility status (0=none, 1=pending, 2=enabled, 3=restricted).
+	"""
+	monetizationStatus: PostMonetizationStatus
+	"""
+	Indexed MyData record when `mydata_id` is set and found in the indexer.
+	"""
+	mydata: MyDataRecord
+	"""
+	Optional linked MyData object id.
+	"""
+	mydataId: String
+	"""
+	Agentic organization attributed to this post, when indexed.
+	"""
+	organizationId: String
 	"""
 	The wallet address of the post owner.
 	"""
@@ -3614,9 +6377,70 @@ type Post implements Node {
 	"""
 	parentPostId: String
 	"""
+	Permission bitfield from chain (`post.move` PERMISSION_*).
+	"""
+	permissions: Int
+	"""
+	Platform id where this post was created (indexed from `PostCreatedEvent`).
+	"""
+	platformId: String
+	"""
+	Derived playback/monetization restrictions from bindings and decision snapshots.
+	"""
+	playbackPolicy: PlaybackPolicy!
+	"""
+	Latest PoC analysis result for this post.
+	"""
+	pocAnalysis: PocAnalysisResult
+	"""
+	When the post was analyzed (epoch milliseconds).
+	"""
+	pocAnalyzedAt: Int
+	"""
+	PoC disputes for this post (paginated).
+	"""
+	pocDisputes(limit: Int, offset: Int): [PocDispute!]
+	"""
+	Successful PoC dispute submissions over this post's lifetime (`0`–`2`); not reset when PoC is cleared.
+	"""
+	pocDisputesSubmitted: Int!
+	"""
+	Evidence URLs from PoC analysis.
+	"""
+	pocEvidenceUrls: JSON
+	"""
+	Media type analyzed (1=image, 2=video, 3=audio).
+	"""
+	pocMediaType: Int
+	"""
+	Oracle address that performed the PoC analysis.
+	"""
+	pocOracleAddress: String
+	"""
+	PoC outcome code from chain (legacy post-level PoC; deprecated for MediaAsset-centric posts).
+	"""
+	pocOutcome: Int
+	"""
+	Oracle reasoning from PoC analysis.
+	"""
+	pocReasoning: String
+	"""
+	Revenue redirect mode (none, wallet, escrow, treasury).
+	"""
+	pocRedirectionKind: Int
+	"""
+	Highest similarity score from PoC analysis (0-100).
+	"""
+	pocSimilarityScore: Int
+	"""
 	The post ID.
 	"""
 	postId: String!
+	"""
+	True when this reservation amount's creator-fee slice hits an escrow revenue-manifest
+	entry and Move requires `reserve_towards_post_with_platform` (vault).
+	"""
+	postReserveRequiresBeneficiaryVault(reservationAmountMist: UInt53!): Boolean!
 	"""
 	The post type.
 	"""
@@ -3630,6 +6454,10 @@ type Post implements Node {
 	"""
 	promotion: Promotion
 	"""
+	On-chain promotion object id when promoted.
+	"""
+	promotionId: String
+	"""
 	Number of reactions.
 	"""
 	reactionCount: Int!
@@ -3637,6 +6465,12 @@ type Post implements Node {
 	Reactions on this post (paginated).
 	"""
 	reactions(limit: Int, offset: Int): [ReactionSummary!]
+	removedBy: String
+	removedFromPlatform: Boolean
+	"""
+	User reports filed against this post (paginated, newest first).
+	"""
+	reports(limit: Int, offset: Int): [PostReport!]
 	"""
 	Number of reposts.
 	"""
@@ -3645,22 +6479,81 @@ type Post implements Node {
 	Reposts of this post (paginated).
 	"""
 	reposts(limit: Int, offset: Int): [RepostSummary!]
+	requiresSubscription: Boolean @deprecated(reason: "Use `access.kind` instead.")
+	"""
+	Latest revenue manifest indexed for creator-attributable tip splits on this post.
+	"""
+	revenueManifest: RevenueManifest
+	"""
+	Optional off-chain / indexed revenue recipient address.
+	"""
+	revenueRecipient: String
+	"""
+	Percentage of revenue redirected to the original creator.
+	"""
+	revenueRedirectPercentage: Int
+	"""
+	Post ID receiving redirected revenue (for derivative content).
+	"""
+	revenueRedirectTo: String
+	"""
+	Revenue redirections for this post (as accused or original).
+	"""
+	revenueRedirections(limit: Int, offset: Int): [PocRevenueRedirection!]
+	"""
+	Multi-claim SPoT analysis status/counts for this post (null only if the post is missing).
+	"""
+	spotAnalysis: SpotPostAnalysis
+	"""
+	Spot bet withdrawals for this post (paginated).
+	"""
+	spotBetWithdrawals(limit: Int, offset: Int): [SpotBetWithdrawal!]
 	"""
 	Spot bets for this post (paginated).
 	"""
 	spotBets(limit: Int, offset: Int): [SpotBet!]
 	"""
+	Spot payouts for this post (paginated).
+	"""
+	spotPayouts(limit: Int, offset: Int): [SpotPayout!]
+	"""
 	Spot record for this post (1:1, null if no record).
 	"""
 	spotRecord: SpotRecord
+	"""
+	Spot refunds for this post (paginated).
+	"""
+	spotRefunds(limit: Int, offset: Int): [SpotRefund!]
+	"""
+	Spot resolution for this post (1:1, null if not resolved).
+	"""
+	spotResolution: SpotResolution
+	"""
+	Past-claim verdicts for this post, in claim_index order (empty when none).
+	"""
+	spotVerdicts: [SpotClaimVerdict!]!
+	"""
+	Linked SPT pool id when set.
+	"""
+	sptId: String
+	"""
+	Minimum active profile-subscription plan price for a profile-gated post.
+	One-time post pricing is exposed by the linked MyData record.
+	"""
+	subscriptionPrice: Int
+	subscriptionServiceId: String @deprecated(reason: "Use `access.subscriptionServiceId` instead.")
 	"""
 	Tips received for this post (paginated).
 	"""
 	tips(limit: Int, offset: Int): [TipSummary!]
 	"""
-	Total tips received.
+	Creator earnings credited on-chain to the post owner (`Post.tips_received`).
 	"""
 	tipsReceived: Int!
+	"""
+	Total user spend on this post (sum of indexed tip rows with `is_post = true`).
+	"""
+	totalTipVolume: Int!
 	"""
 	Ownership transfers for this post (paginated).
 	"""
@@ -3669,6 +6562,237 @@ type Post implements Node {
 	When the post was last updated (Unix timestamp in milliseconds).
 	"""
 	updatedAt: Int
+	"""
+	Effective usage decision snapshots per embedded binding.
+	"""
+	usageDecisions: [UsageDecisionSnapshot!]
+	"""
+	Active container usage denials scoped to bindings on this post.
+	"""
+	usageDenials: [ContainerUsageDenial!]
+}
+
+type PostAccess {
+	kind: PostAccessKind!
+	mydataId: String
+	subscriptionMinTierLevel: Int
+	subscriptionServiceId: String
+}
+
+enum PostAccessKind {
+	PUBLIC
+	PROFILE_SUBSCRIPTION
+	MARKETPLACE_ONE_TIME
+}
+
+type PostAccessPurchase {
+	buyer: MySoAddress!
+	"""
+	The MyData listing that was bought.
+	"""
+	mydataId: String!
+	postId: String!
+	purchasedAtMs: Int!
+	seller: MySoAddress!
+}
+
+"""
+Move `media_asset::composition_*` constants.
+"""
+enum PostCompositionStatus {
+	NONE
+	PENDING
+	VERIFIED
+	INVALID
+	PARTIALLY_RESTRICTED
+}
+
+type PostConfig {
+	"""
+	Commenter tip percentage (remainder to post owner).
+	"""
+	commenterTipPercentage: Int!
+	"""
+	Ecosystem fee bps taken from each confirmed promo view gross.
+	"""
+	ecosystemFeeBps: Int!
+	"""
+	Maximum content length in characters.
+	"""
+	maxContentLength: Int!
+	"""
+	Maximum report description length.
+	"""
+	maxDescriptionLength: Int!
+	"""
+	Maximum media URLs per post.
+	"""
+	maxMediaUrls: Int!
+	"""
+	Maximum mentions per post.
+	"""
+	maxMentions: Int!
+	"""
+	Maximum metadata size in bytes.
+	"""
+	maxMetadataSize: Int!
+	"""
+	Maximum promotion amount a post owner may deposit for a single promoted post campaign (MYSO base units).
+	"""
+	maxPromotionAmount: Int!
+	"""
+	Maximum reaction text length.
+	"""
+	maxReactionLength: Int!
+	"""
+	Minimum promotion amount a post owner must deposit to start a promoted post campaign (MYSO base units).
+	"""
+	minPromotionAmount: Int!
+	"""
+	Minimum view duration (ms) required for a promoted-post view to count toward the campaign.
+	"""
+	minViewDurationMs: Int!
+	"""
+	Platform fee bps taken from each confirmed promo view gross.
+	"""
+	platformFeeBps: Int!
+	"""
+	Repost tip percentage (remainder to original post owner).
+	"""
+	repostTipPercentage: Int!
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID of the last config update.
+	"""
+	transactionId: String!
+	"""
+	Last updated timestamp (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Address that last updated the configuration.
+	"""
+	updatedBy: String!
+	"""
+	Configuration version.
+	"""
+	version: Int!
+}
+
+type PostDeletionEvent {
+	"""
+	Epoch milliseconds when the chain recorded deletion.
+	"""
+	deletedAt: Int!
+	"""
+	Database id for this deletion row.
+	"""
+	eventId: Int!
+	"""
+	True if the deleted object was a post; false if a comment.
+	"""
+	isPost: Boolean!
+	"""
+	Post or comment id that was deleted.
+	"""
+	objectId: String!
+	owner: MySoAddress!
+	"""
+	Profile of the owner (at deletion time).
+	"""
+	ownerProfile: ProfileSummary
+	"""
+	Parent post id (for comment deletions) or the post id for post deletions, when set.
+	"""
+	postId: String
+	postType: String
+	profileId: String!
+	"""
+	Hypertable timestamp for this row.
+	"""
+	time: DateTime!
+	transactionId: String!
+}
+
+type PostModerationEvent {
+	"""
+	Database id for this moderation row.
+	"""
+	eventId: Int!
+	"""
+	When the action was recorded (epoch milliseconds; set by the indexer when absent on-chain).
+	"""
+	moderatedAt: Int!
+	moderatedBy: MySoAddress!
+	"""
+	Profile of the moderator.
+	"""
+	moderatedByProfile: ProfileSummary
+	"""
+	Post or comment id that was moderated.
+	"""
+	objectId: String!
+	platformId: String!
+	removed: Boolean!
+	"""
+	Hypertable timestamp for this row.
+	"""
+	time: DateTime!
+	transactionId: String!
+}
+
+"""
+Move `media_asset::monetization_*` constants.
+"""
+enum PostMonetizationStatus {
+	NONE
+	PENDING
+	ENABLED
+	RESTRICTED
+}
+
+type PostPage {
+	items: [Post!]!
+	limit: Int!
+	offset: Int!
+	totalCount: Int!
+	"""
+	Total pages for this `limit` (0 when there are no posts).
+	"""
+	totalPages: Int!
+}
+
+type PostReport {
+	description: String!
+	"""
+	True if the report targets a comment; false if it targets a post.
+	"""
+	isComment: Boolean!
+	"""
+	Post or comment id that was reported.
+	"""
+	objectId: String!
+	"""
+	On-chain user report reason code.
+	"""
+	reasonCode: Int!
+	"""
+	Database id for this report row.
+	"""
+	reportId: Int!
+	"""
+	When the report was filed (Unix ms from myso::clock::Clock at 0x6).
+	"""
+	reportedAt: Int!
+	reporter: MySoAddress!
+	"""
+	Profile of the reporter.
+	"""
+	reporterProfile: ProfileSummary
+	transactionId: String!
 }
 
 type PostTransferSummary {
@@ -3691,6 +6815,15 @@ type Profile implements Node {
 	The wallet address that owns this profile.
 	"""
 	address: MySoAddress!
+	"""
+	Agentic organizations owned by this profile (max 8 per user on-chain).
+	"""
+	agenticOrganizations(orgType: Int, activeOnly: Boolean, limit: Int, offset: Int): [AgenticOrganization!]
+	"""
+	AI credit balance for this profile owner (1 MYSO = 1 credit).
+	"""
+	aiCreditBalance: AiCreditBalance
+	auditLog(filter: AuditLogFilterInput, limit: Int! = 20, offset: Int! = 0): AuditLogConnection
 	"""
 	Profile badges (paginated).
 	"""
@@ -3716,37 +6849,29 @@ type Profile implements Node {
 	"""
 	blockedProfiles(limit: Int, offset: Int): [BlockedProfileSummary!]
 	"""
+	On-chain contract version for this profile object.
+	"""
+	contractVersion: Int!
+	"""
 	URL to the cover photo.
 	"""
 	coverPhoto: String
 	"""
-	When the profile was created (ISO 8601).
+	When the profile was created (Unix ms from chain Clock at 0x6).
 	"""
-	createdAt: String
+	createdAt: Int
 	"""
-	Current location.
+	When the owner deleted this profile (Unix ms from chain Clock at 0x6). Null while the profile is live.
 	"""
-	currentLocation: String
+	deletedAt: Int
 	"""
 	The profile's display name.
 	"""
 	displayName: String
 	"""
-	Education.
-	"""
-	education: String
-	"""
-	Email (encrypted).
-	"""
-	email: String
-	"""
-	Facebook username.
-	"""
-	facebookUsername: String
-	"""
 	Followers (paginated).
 	"""
-	followers(limit: Int, offset: Int): [ProfileSummary!]
+	followers(viewer: MySoAddress, limit: Int, offset: Int): [ProfileSummary!]
 	"""
 	Number of followers.
 	"""
@@ -3754,55 +6879,75 @@ type Profile implements Node {
 	"""
 	Following (paginated).
 	"""
-	following(limit: Int, offset: Int): [ProfileSummary!]
+	following(viewer: MySoAddress, limit: Int, offset: Int): [ProfileSummary!]
 	"""
 	Number of accounts this profile follows.
 	"""
 	followingCount: Int!
 	"""
-	Gender.
-	"""
-	gender: String
-	"""
-	GitHub username.
-	"""
-	githubUsername: String
-	"""
 	The profile's globally unique identifier.
 	"""
 	id: ID!
 	"""
-	Mastodon username.
+	Location.
 	"""
-	mastodonUsername: String
+	location: String
 	"""
-	Minimum offer amount for profile sales.
+	Memory account row for this profile owner.
 	"""
-	minOfferAmount: Int
+	memoryAccount: MemoryAccount
+	"""
+	Linked memory account object id for this profile's sub-agent registry.
+	"""
+	memoryAccountId: String
+	"""
+	Accounts the browsing viewer follows that also follow this profile.
+	Ranked by follower count. `limit` defaults to 20 (max 100).
+	"""
+	mutualConnections(viewer: MySoAddress!, limit: Int, offset: Int): [ProfileSummary!]
+	"""
+	Count of accounts the browsing viewer follows that also follow this profile.
+	Returns `0` when `viewer` is this profile.
+	"""
+	mutualCount(viewer: MySoAddress!): Int
 	"""
 	MyData records owned by this profile (paginated).
 	"""
 	mydataRecords(limit: Int, offset: Int): [MyDataRecord!]
 	"""
-	Phone (encrypted).
-	"""
-	phone: String
-	"""
-	Platforms this profile has joined (paginated).
+	Platforms this profile has joined (paginated). Each row includes platform fields in one SQL round-trip.
 	"""
 	platformMemberships(limit: Int, offset: Int): [PlatformMembershipSummary!]
 	"""
-	Political view.
+	Same rows as `platformMemberships` plus total count and `totalPages` for UI pagers.
 	"""
-	politicalView: String
+	platformMembershipsPage(limit: Int, offset: Int): PlatformMembershipPage
+	"""
+	Total number of platform memberships for this profile (same filter as `platformMemberships`).
+	"""
+	platformMembershipsTotal: Int
+	"""
+	Cash-flow P&L for this profile's owner wallet (MYSO base units; not realized/FIFO P&L).
+	When `windows` is omitted, defaults to 7d, 30d, and all-time.
+	"""
+	pnl(windows: [ProfilePnLWindow!]): [ProfilePnLWindowStats!]
 	"""
 	Number of posts.
 	"""
-	postCount: Int!
+	postCount(platform: MySoAddress): Int!
 	"""
-	Primary language.
+	Posts by this profile (paginated, newest first). Matches REST `GET /profiles/:address/posts`
+	scope: `posts.owner` is this profile's wallet **or** `posts.profile_id` is this profile's object id.
 	"""
-	primaryLanguage: String
+	posts(postType: String, pocOutcomes: [Int!], includeRemoved: Boolean, limit: Int, offset: Int): [Post!]
+	"""
+	Same rows as `posts` with total count and `totalPages` for pagers.
+	"""
+	postsPage(postType: String, pocOutcomes: [Int!], includeRemoved: Boolean, limit: Int, offset: Int): PostPage
+	"""
+	Total post count for this profile (same filters as `posts` / `postsPage`).
+	"""
+	postsTotalCount(postType: String, pocOutcomes: [Int!], includeRemoved: Boolean): Int
 	"""
 	The profile ID (object address).
 	"""
@@ -3812,21 +6957,17 @@ type Profile implements Node {
 	"""
 	profilePhoto: String
 	"""
-	Raised location.
+	Follow suggestions for the browsing viewer while viewing this profile.
+	
+	Candidates come from this profile's friends-of-friends. Results exclude accounts
+	the viewer (or profile, when `viewer` is omitted) already follows, require overlap
+	through the viewer's following graph, and are ranked by that overlap (`mutualCount`).
 	"""
-	raisedLocation: String
+	recommendations(viewer: MySoAddress, limit: Int, offset: Int): [ProfileSummary!]
 	"""
-	Reddit username.
+	Reservation SPT holdings for this profile (paginated).
 	"""
-	redditUsername: String
-	"""
-	Relationship status.
-	"""
-	relationshipStatus: String
-	"""
-	Religion.
-	"""
-	religion: String
+	reservationHoldings(limit: Int, offset: Int): [SptReservationHolding!]
 	"""
 	Reservation pool address.
 	"""
@@ -3840,11 +6981,15 @@ type Profile implements Node {
 	"""
 	selectedBadgeId: String
 	"""
+	Selected ecosystem badge.
+	"""
+	selectedEcosystemBadge: SelectedBadge
+	"""
 	Selected ecosystem badge ID.
 	"""
 	selectedEcosystemBadgeId: String
 	"""
-	Social proof token info.
+	Social proof token info (reservation pool fields match nested profile summaries; loads via social reader when configured).
 	"""
 	socialProofToken: SocialProofToken
 	"""
@@ -3856,9 +7001,33 @@ type Profile implements Node {
 	"""
 	sptHoldings(limit: Int, offset: Int): [SptHolding!]
 	"""
-	When the profile was last updated (ISO 8601).
+	Personal SPT investment metrics (WAC). Not token price performance.
 	"""
-	updatedAt: String
+	sptPortfolioMetrics: SptPortfolioMetrics
+	"""
+	Per-pool personal SPT positions.
+	"""
+	sptPositionMetrics(limit: Int, offset: Int): [SptPositionMetrics!]
+	"""
+	Mark-to-market series for one personal position.
+	"""
+	sptPositionTimeseries(poolId: String!, window: SptReturnWindow): [SptPositionTimeSeriesPoint!]
+	subAgent(derivedAddress: MySoAddress!): SubAgent
+	subAgentByObjectId(agentObjectId: String!): SubAgent
+	"""
+	Sub-agents registered under this profile's memory account.
+	"""
+	subAgents(activeOnly: Boolean, limit: Int, offset: Int): [SubAgent!]
+	"""
+	P&L of every sub-agent under this profile, with a roll-up across all of them.
+	Revoked and deactivated agents are included unless `activeOnly` is true.
+	"""
+	subAgentsPnl(activeOnly: Boolean, windows: [ProfilePnLWindow!], limit: Int, offset: Int): SubAgentPnlSummary
+	subAgentsTotalCount(activeOnly: Boolean): Int
+	"""
+	When the profile was last updated (Unix ms from chain Clock at 0x6).
+	"""
+	updatedAt: Int
 	"""
 	The profile's username.
 	"""
@@ -3866,7 +7035,7 @@ type Profile implements Node {
 	"""
 	Vesting wallets owned by this profile (paginated).
 	"""
-	vestingWallets(limit: Int, offset: Int): [VestingWallet!]
+	vestingWallets(coinType: String, limit: Int, offset: Int): [VestingWallet!]
 	"""
 	The profile's website.
 	"""
@@ -3903,6 +7072,10 @@ type ProfileBadge {
 	"""
 	badgeId: String!
 	"""
+	ecosystem (soulbound object in the wallet) | platform (platform ledger grant)
+	"""
+	badgeKind: String!
+	"""
 	Badge media URL.
 	"""
 	badgeMediaUrl: String
@@ -3911,13 +7084,154 @@ type ProfileBadge {
 	"""
 	badgeName: String!
 	"""
+	`platform::EcosystemBadge` object id — pass it to `select_ecosystem_badge_on_profile`
+	or `burn_ecosystem_badge`. Null for platform ledger badges.
+	"""
+	badgeObjectId: String
+	"""
 	Badge type.
 	"""
 	badgeType: Int!
 	"""
+	Expiry (epoch ms). Null means no expiry.
+	"""
+	expiresAt: BigInt
+	"""
 	Platform ID.
 	"""
 	platformId: String!
+}
+
+type ProfileConfig {
+	"""
+	Maximum curve factor accepted for profile vesting curves.
+	"""
+	curveFactorMax: Int!
+	"""
+	Minimum curve factor accepted for profile vesting curves.
+	"""
+	curveFactorMin: Int!
+	"""
+	Precision divisor used when interpreting curve factors.
+	"""
+	curvePrecision: Int!
+	"""
+	Maximum username length enforced at profile creation.
+	"""
+	maxUsernameLength: Int!
+	"""
+	Maximum number of vesting pieces allowed on a profile vesting schedule.
+	"""
+	maxVestingPieces: Int!
+	"""
+	Minimum divisor accepted for the claim threshold on profile vesting.
+	"""
+	minClaimThresholdDivisor: Int!
+	"""
+	Minimum username length enforced at profile creation.
+	"""
+	minUsernameLength: Int!
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID of the last config update.
+	"""
+	transactionId: String!
+	"""
+	Last updated timestamp (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Address that last updated the configuration.
+	"""
+	updatedBy: String!
+	"""
+	Fee in basis points taken on username marketplace sales (10000 = 100%).
+	"""
+	usernameSaleFeeBps: Int!
+	"""
+	Configuration version.
+	"""
+	version: Int!
+}
+
+"""
+Time window for P&L aggregation (cutoff from database `NOW()`).
+"""
+enum ProfilePnLWindow {
+	DAYS_7
+	DAYS_30
+	DAYS_180
+	DAYS_365
+	ALL
+}
+
+"""
+Per-window cash-flow breakdown for the profile owner wallet.
+"""
+type ProfilePnLWindowStats {
+	grossInboundMyso: Int!
+	messagingMyso: Int!
+	mydataMyso: Int!
+	netCashFlowMyso: Int!
+	otherInboundMyso: Int!
+	postsMonetizationMyso: Int!
+	reservationNetMyso: Int!
+	sptCreatorFeesMyso: Int!
+	subscriptionsMyso: Int!
+	swapNetMyso: Int!
+	tipsMyso: Int!
+	usernameMarketplaceMyso: Int!
+	window: ProfilePnLWindow!
+}
+
+type ProfileSubscription {
+	active: Boolean!
+	autoRenew: Boolean!
+	cancelledAt: Int
+	coinType: String!
+	createdAt: Int!
+	durationMs: Int!
+	expiresAt: Int!
+	planId: String!
+	platformId: String
+	price: Int!
+	profileOwner: String!
+	renewalBalance: Int!
+	renewalCount: Int!
+	serviceId: String!
+	subscriber: String!
+	subscriptionId: String!
+	tierLevel: Int
+}
+
+type ProfileSubscriptionPlan {
+	active: Boolean!
+	coinType: String!
+	createdAt: Int!
+	description: String
+	durationMs: Int!
+	planId: String!
+	platformId: String
+	price: Int!
+	serviceId: String!
+	tierLevel: Int
+	title: String!
+	updatedAt: Int
+}
+
+type ProfileSubscriptionService {
+	active: Boolean!
+	createdAt: Int!
+	paymentRecipient: String!
+	planCount: Int!
+	profileId: String!
+	profileOwner: String!
+	serviceId: String!
+	subscriberCount: Int!
+	updatedAt: Int
 }
 
 type ProfileSummary {
@@ -3930,6 +7244,18 @@ type ProfileSummary {
 	"""
 	bio: String
 	"""
+	When `viewer` was passed, whether this address has blocked the viewer.
+	"""
+	blockedBySubject: Boolean
+	"""
+	When `viewer` was passed, whether the viewer has blocked this address.
+	"""
+	blockedByViewer: Boolean
+	"""
+	Number of blocked accounts. Present for both profile and wallet-only addresses.
+	"""
+	blockedCount: Int
+	"""
 	Display name.
 	"""
 	displayName: String
@@ -3938,9 +7264,30 @@ type ProfileSummary {
 	"""
 	followersCount: Int
 	"""
-	Number of accounts this address follows. Present for both profile and wallet-only addresses.
+	Number of accounts this profile follows. Present for both profile and wallet-only addresses.
 	"""
 	followingCount: Int
+	"""
+	When `viewer` was passed, whether this address follows the viewer ("follows you").
+	"""
+	followsViewer: Boolean
+	"""
+	When the parent query passed `viewer`, whether the viewer follows this address.
+	"""
+	isFollowing: Boolean
+	"""
+	On recommendations queries: viewer-following accounts that also follow this address
+	(top N by follower count for avatar stacks; does not cap `mutualCount`).
+	"""
+	mutualConnections(limit: Int): [ProfileSummary!]!
+	"""
+	On recommendations queries: count of viewer-following accounts that also follow this address.
+	"""
+	mutualCount: Int
+	"""
+	Number of posts. Present for both profile and wallet-only addresses.
+	"""
+	postCount(platform: MySoAddress): Int
 	"""
 	Profile photo URL.
 	"""
@@ -4006,9 +7353,29 @@ type Promotion {
 	"""
 	budget: Int!
 	"""
+	Creation timestamp (epoch ms).
+	"""
+	createdAt: Int!
+	"""
+	Hourly aggregates (last 7 days).
+	"""
+	hourly(limit: Int): [PromotionHourly!]
+	"""
+	Owner address.
+	"""
+	owner: MySoAddress!
+	"""
+	Payment per view (in MIST).
+	"""
+	paymentPerView: Int!
+	"""
 	The post ID this promotion is for.
 	"""
 	postId: String!
+	"""
+	Profile ID of the promotion owner.
+	"""
+	profileId: String!
 	"""
 	The promotion ID.
 	"""
@@ -4018,24 +7385,164 @@ type Promotion {
 	"""
 	remainingBudget: Int!
 	"""
+	Aggregated stats for this promotion.
+	"""
+	stats: PromotionStats
+	"""
 	Promotion status: "active" or "inactive".
 	"""
 	status: String!
 	"""
+	Daily time series (last 30 days).
+	"""
+	timeSeries(limit: Int): [PromotionTimeSeries!]
+	"""
 	Number of views.
+	"""
+	views: Int!
+	"""
+	Individual view records (paginated).
+	"""
+	viewsDetail(limit: Int, offset: Int): [PromotionView!]
+}
+
+type PromotionHourly {
+	"""
+	Hour of day (0-23).
+	"""
+	hour: Int!
+	"""
+	Amount spent this hour (MIST).
+	"""
+	spent: Int!
+	"""
+	View count for this hour.
 	"""
 	views: Int!
 }
 
+type PromotionStats {
+	"""
+	Remaining budget (MIST).
+	"""
+	remainingBudget: Int!
+	"""
+	Total amount spent (MIST).
+	Advertiser gross spend across confirmed views (sum of `payment_amount`, MIST).
+	"""
+	totalSpent: Int!
+	"""
+	Total view count.
+	"""
+	totalViews: Int!
+}
+
+type PromotionTimeSeries {
+	"""
+	Day (YYYY-MM-DD).
+	"""
+	day: String!
+	"""
+	Amount spent this day (MIST).
+	"""
+	spent: Int!
+	"""
+	View count for this day.
+	"""
+	views: Int!
+}
+
+type PromotionView {
+	"""
+	Ecosystem fee taken from the gross (MIST).
+	"""
+	ecosystemFee: Int!
+	"""
+	Gross payment amount for this view (advertiser budget debit, MIST).
+	"""
+	paymentAmount: Int!
+	"""
+	Platform fee taken from the gross (MIST).
+	"""
+	platformFee: Int!
+	"""
+	Platform where the view occurred.
+	"""
+	platformId: String!
+	"""
+	Post ID.
+	"""
+	postId: String!
+	"""
+	Promotion ID.
+	"""
+	promotionId: String!
+	"""
+	Net MYSO transferred to the viewer (MIST).
+	"""
+	recipientAmount: Int!
+	"""
+	View timestamp (epoch ms).
+	"""
+	timestamp: Int!
+	"""
+	View duration (ms).
+	"""
+	viewDuration: Int!
+	"""
+	Viewer address.
+	"""
+	viewer: MySoAddress!
+	"""
+	Profile of the viewer.
+	"""
+	viewerProfile: ProfileSummary
+}
+
 type Proposal {
+	"""
+	Anonymous voting stats for this proposal.
+	"""
+	anonymousStats: AnonymousVotingStats
 	"""
 	Anonymous voters count (when anonymous voting enabled).
 	"""
 	anonymousVotersCount: Int
 	"""
+	Anonymous votes on this proposal (paginated).
+	"""
+	anonymousVotes(limit: Int, offset: Int): [AnonymousVote!]
+	"""
+	Whether `address` may cast a community vote under the on-chain voter rules. Every registry
+	requires the voter to own a profile; platform proposals (registry_type=3) also require an
+	active platform membership and no platform block. Does not check lifecycle status or whether
+	`address` already voted. Returns null when the social DB is not configured.
+	"""
+	communityVoteEligibility(address: MySoAddress!): CommunityVoteEligibility
+	"""
+	Community votes on this proposal (paginated).
+	"""
+	communityVotes(limit: Int, offset: Int): [CommunityVote!]
+	"""
+	Count of community votes on this proposal.
+	"""
+	communityVotesCount: Int
+	"""
+	Vote decryption failures for this proposal.
+	"""
+	decryptionFailures: [VoteDecryptionFailure!]
+	"""
+	Delegate votes on this proposal (paginated).
+	"""
+	delegateVotes(limit: Int, offset: Int): [DelegateVote!]
+	"""
 	Proposal description.
 	"""
 	description: String!
+	"""
+	On-chain `GovernanceDAO` object id for this proposal's registry instance.
+	"""
+	governanceRegistryId: String!
 	"""
 	Implementation time (epoch ms).
 	"""
@@ -4045,6 +7552,23 @@ type Proposal {
 	"""
 	implementedDescription: String
 	"""
+	Delegates who asked the AI Jury to take over this proposal's council review.
+	"""
+	juryReferrals: [ProposalJuryReferral!]
+	"""
+	Where the AI Jury stands on each human step of this proposal (council, community). Empty
+	when the jury has not been involved.
+	"""
+	juryReviews: [ProposalJuryReview!]
+	"""
+	Linked media asset for PoC media-asset rights governance proposals (registry_type=1).
+	"""
+	mediaAsset: MediaAsset
+	"""
+	Metadata JSON (arbitrary structured data).
+	"""
+	metadataJson: JSON
+	"""
 	Unique proposal identifier (object ID on-chain).
 	"""
 	proposalId: String!
@@ -4053,21 +7577,33 @@ type Proposal {
 	"""
 	referenceId: String
 	"""
-	Registry type (0=ecosystem, 1=proof of creativity, 3=platform).
+	Governance registry / proposal bucket (0=ecosystem, 1=proof of creativity, 2=SPoT, 3=platform). Same numeric space as chain `proposal_type`; not proposal lifecycle status.
 	"""
 	registryType: Int!
+	"""
+	Time the delegate council rejected the proposal (epoch ms), when status=rejected from council review.
+	"""
+	rejectionTime: Int
 	"""
 	Rescind time (epoch ms, when rescinded).
 	"""
 	rescindTime: Int
 	"""
-	Reward pool amount.
+	On-chain-observed pool movements: forfeits to ecosystem or platform-governance treasuries, implementation reward to submitter, rescind refund, etc. See `distributionType` on each row.
+	"""
+	rewardDistributions: [RewardDistribution!]
+	"""
+	MYSO held in the proposal reward pool (submission stake plus quadratic vote fees). Drained on treasury forfeiture, implementation reward to submitter, or owner rescind.
 	"""
 	rewardPool: Int!
 	"""
-	Proposal status (0=submitted, 1=delegate_review, 2=community_voting, 3=approved, 4=rejected, 5=implemented, 6=rescinded).
+	Linked SPoT record for SPoT resolution proposals (registry_type=2).
 	"""
-	status: Int!
+	spotRecord: SpotRecord
+	"""
+	Proposal lifecycle status (0=submitted, 1=delegate_review, 2=community_voting, 3=approved, 4=rejected, 5=implemented, 6=rescinded). New proposals created on chain enter delegate review (1); `0` is not used for newly submitted work.
+	"""
+	status: GovernanceProposalStatus!
 	"""
 	Submission time (epoch ms).
 	"""
@@ -4096,6 +7632,41 @@ type Proposal {
 	Voting start time (epoch ms, when in community voting).
 	"""
 	votingStartTime: Int
+}
+
+type ProposalJuryReferral {
+	delegateAddress: MySoAddress!
+	reason: String
+	referredAtMs: Int!
+}
+
+type ProposalJuryReview {
+	"""
+	The case behind this step. Jurors, votes and evidence are on the REST routes.
+	"""
+	case: JuryCase
+	"""
+	The jury case, once the step has been handed over.
+	"""
+	caseId: String
+	decidedAtMs: Int
+	"""
+	Null until the jury has decided or its default has applied.
+	"""
+	decision: JuryDecision
+	escalatedAtMs: Int
+	"""
+	The jury could not decide, so the step's default applied.
+	"""
+	failed: Boolean!
+	proposalId: String!
+	"""
+	How many delegates referred the proposal at the council step.
+	"""
+	referralCount: Int!
+	stage: JuryStage!
+	state: JuryReviewState!
+	trigger: JuryTrigger!
 }
 
 type ProposalVotes {
@@ -4200,6 +7771,22 @@ type Query {
 	"""
 	address(address: MySoAddress, rootVersion: UInt53, atCheckpoint: UInt53): Address
 	"""
+	Agentic organization by object id. Returns null when social DB not configured or not found.
+	"""
+	agenticOrganization(organizationId: String!): AgenticOrganization
+	"""
+	Category-scoped agentic organization leaderboard. Returns empty when social DB not configured.
+	"""
+	agenticOrganizationsLeaderboard(sort: OrganizationLeaderboardSort!, category: OrganizationType!, window: OrganizationStatsWindow, limit: Int, offset: Int): AgenticOrganizationLeaderboardResponse
+	"""
+	AI credit configuration. Returns null when social DB not configured or no config.
+	"""
+	aiCreditConfiguration: AiCreditConfig
+	"""
+	Anonymous voting trends (daily aggregates). Returns empty when social DB not configured.
+	"""
+	anonymousVotingTrends(limit: Int): [AnonymousVotingTrend!]
+	"""
 	The network's genesis checkpoint digest (uniquely identifies the network), Base58-encoded.
 	"""
 	chainIdentifier: String!
@@ -4232,13 +7819,22 @@ type Query {
 	"""
 	comment(id: ID!): CommentSummary
 	"""
+	Contested SPoT records in DAO_REQUIRED status (paginated).
+	"""
+	contestedSpotRecords(limit: Int, offset: Int): [SpotRecord!]
+	"""
 	Fetch a delegate by address. Returns null when social DB not configured or not found.
 	"""
-	delegate(address: MySoAddress!): Delegate
+	delegate(address: MySoAddress!, viewer: MySoAddress, registryType: Int, governanceRegistryId: String): Delegate
 	"""
-	List delegates (paginated, optionally filtered by registry type). Returns empty when social DB not configured.
+	List delegates (paginated, optionally filtered by registry type and active status). Returns empty when social DB not configured.
 	"""
-	delegates(registryType: Int, limit: Int, offset: Int): [Delegate!]
+	delegates(registryType: Int, isActive: Boolean, viewer: MySoAddress, limit: Int, offset: Int): [Delegate!]
+	"""
+	Ecosystem treasury (treasury address + profile sale fee bps). Returns null when social DB
+	not configured or no treasury row indexed.
+	"""
+	ecosystemTreasury: EcosystemTreasury
 	"""
 	Fetch an epoch by its ID, or fetch the latest epoch if no ID is provided.
 	
@@ -4254,25 +7850,87 @@ type Query {
 	"""
 	events(first: Int, after: String, last: Int, before: String, filter: EventFilter): EventConnection
 	"""
-	List all governance registries. Returns empty when social DB not configured.
+	List governance events (paginated). Returns empty when social DB not configured.
 	"""
-	governanceRegistries: [GovernanceRegistry!]
+	governanceEvents(limit: Int, offset: Int, governanceRegistryId: String, registryType: Int, eventType: String, proposalId: String, createdAfterMs: Int, createdBeforeMs: Int): [GovernanceEvent!]
+	"""
+	List governance registries, optionally filtered by registry type. Returns empty when social DB not configured.
+	"""
+	governanceRegistries(registryType: Int): [GovernanceRegistry!]
 	"""
 	Fetch governance registry for a platform (by platform ID). Returns null when social DB not configured or platform has no registry.
 	"""
 	governanceRegistry(platformId: String!): GovernanceRegistry
 	"""
-	Insurance policies by insured address. Returns empty when social DB not configured.
+	Check whether a user has active MyData access (indexer mirror; key servers use on-chain policy).
 	"""
-	insurancePolicies(insured: MySoAddress!, limit: Int, offset: Int): [InsurancePolicy!]
+	hasMydataAccess(mydataId: ID!, user: MySoAddress!): Boolean
+	"""
+	Insurance configuration (unified view: pricing + router limits). Returns null when social
+	DB not configured or neither side has been indexed.
+	"""
+	insuranceConfiguration: InsuranceConfiguration
+	"""
+	Coverage route by route object ID. Returns null when social DB not configured or not found.
+	"""
+	insuranceCoverageRoute(routeId: ID!): InsuranceCoverageRoute
+	"""
+	Module-level insurance audit events (`insurance_events`). Returns empty when social DB not configured.
+	"""
+	insuranceModuleEvents(limit: Int, offset: Int): [InsuranceModuleEvent!]
+	"""
+	Insurance policies with optional filters. Returns empty when social DB not configured.
+	"""
+	insurancePolicies(insured: MySoAddress, marketId: String, vaultId: String, status: Int, limit: Int, offset: Int): [InsurancePolicy!]
 	"""
 	Insurance policy by ID. Returns null when social DB not configured or not found.
 	"""
 	insurancePolicy(id: ID!): InsurancePolicy
 	"""
+	Route fill legs for a coverage route. Returns empty when social DB not configured.
+	"""
+	insuranceRouteFills(routeId: ID!, limit: Int, offset: Int): [InsuranceRouteFill!]
+	"""
+	Insurance vault by ID. Returns null when social DB not configured or not found.
+	"""
+	insuranceVault(vaultId: ID!): InsuranceVault
+	"""
 	Insurance vaults. Returns empty when social DB not configured.
 	"""
 	insuranceVaults(limit: Int, offset: Int): [InsuranceVault!]
+	"""
+	An AI Jury case by id, without its jurors, rounds or evidence. Returns null when the case
+	does not exist or the social DB is not configured.
+	"""
+	juryCase(caseId: String!): JuryCase
+	"""
+	List MyData records (paginated, optionally filtered by creator, media_type, platform_id). Returns empty when social DB not configured.
+	"""
+	listMydata(creator: MySoAddress, mediaType: String, platformId: String, sortBy: String, limit: Int, offset: Int): [MyDataRecord!]
+	"""
+	Fetch a registered media asset by object id.
+	"""
+	mediaAsset(id: ID!): MediaAsset
+	"""
+	Rights dispute link for one proposal, including the committed beneficiary target.
+	"""
+	mediaAssetRightsProposal(proposalId: ID!): MediaAssetRightsProposalLink
+	"""
+	List governance proposals linked to a media asset rights dispute.
+	"""
+	mediaAssetRightsProposals(mediaAssetId: ID!, limit: Int, offset: Int): [Proposal!]
+	"""
+	Memory configuration. Returns null when social DB not configured or no config.
+	"""
+	memoryConfiguration: MemoryConfig
+	"""
+	Agent-created messaging groups for an organization.
+	"""
+	messagingAgentGroups(organizationId: String!, limit: Int, offset: Int): [MessagingAgentGroup!]
+	"""
+	Paid-messaging configuration. Returns null when social DB not configured or no config.
+	"""
+	messagingConfiguration: MessagingConfig
 	"""
 	Fetch addresses by their keys.
 	
@@ -4324,6 +7982,34 @@ type Query {
 	"""
 	multiGetTypes(keys: [String!]!): [MoveType]!
 	"""
+	MyData marketplace broad pools (indexed `BroadPoolCreatedEvent`). Empty when social DB not configured.
+	"""
+	mydataBroadPools(limit: Int, offset: Int): [MyDataBroadPool!]
+	"""
+	Claim events for a snapshot.
+	"""
+	mydataClaimsForSnapshot(snapshotId: String!, limit: Int, offset: Int): [MyDataClaim!]
+	"""
+	MyData configuration. Returns null when social DB not configured or no config.
+	"""
+	mydataConfiguration: MyDataConfig
+	"""
+	Distribution round for a snapshot (from `DistributionRecordedEvent` when indexed).
+	"""
+	mydataDistributionRound(snapshotId: String!): MyDataDistributionRound
+	"""
+	Recent distribution rounds (paginated).
+	"""
+	mydataDistributionRounds(limit: Int, offset: Int): [MyDataDistributionRound!]
+	"""
+	Listings assigned to a sub-pool (junction).
+	"""
+	mydataListingsForSubPool(subPoolId: String!, limit: Int, offset: Int): [MyDataListingSubPool!]
+	"""
+	Published Merkle root for a snapshot.
+	"""
+	mydataMerkleRoot(snapshotId: String!): MyDataMerkleRoot
+	"""
 	MyData purchases by buyer. Returns empty when social DB not configured.
 	"""
 	mydataPurchases(buyer: MySoAddress!, limit: Int, offset: Int): [MyDataPurchase!]
@@ -4336,9 +8022,36 @@ type Query {
 	"""
 	mydataRecords(owner: MySoAddress!, limit: Int, offset: Int): [MyDataRecord!]
 	"""
+	Latest snapshot anchor for a snapshot ID (includes manifest hash and payment reference when indexed from upgraded packages).
+	"""
+	mydataSnapshotAnchor(snapshotId: String!): MyDataSnapshotAnchor
+	"""
+	Recent snapshot anchors (paginated).
+	"""
+	mydataSnapshotAnchors(limit: Int, offset: Int): [MyDataSnapshotAnchor!]
+	mydataSnapshotEscrow(snapshotId: String!): MyDataSnapshotEscrow
+	"""
+	Sub-pools under a broad pool.
+	"""
+	mydataSubPoolsForBroadPool(broadPoolId: String!, limit: Int, offset: Int): [MyDataSubPool!]
+	"""
 	Fetch a `Node` by its globally unique `ID`. Returns `null` if the node cannot be found (e.g., the underlying data was pruned or never existed).
 	"""
 	node(id: ID!): Node
+	"""
+	List nominated delegates (paginated, optionally filtered by platform, registry type, and status).
+	Returns empty when social DB not configured.
+	
+	`registryType`: 0=ecosystem, 1=proof of creativity, 2=SPoT, 3=platform DAO.
+	If `platformId` is set, results are scoped to that platform's governance registry (same resolution
+	as `proposals(platformId:)` / `governanceRegistry(platformId:)`), and `registryType` is ignored.
+	**Platform DAO (`registryType` 2) requires `platformId`:** when `registryType` is 2 and `platformId`
+	is omitted, returns an empty list (no cross-platform aggregation).
+	
+	Without `platformId`, nominees are listed for ecosystem/PoC (and other non-platform) registries; each row includes the on-chain DAO id.
+	Unfiltered lists omit `registryType` 2.
+	"""
+	nominatedDelegates(platformId: String, registryType: Int, status: Int, viewer: MySoAddress, limit: Int, offset: Int): [NominatedDelegate!]
 	"""
 	Fetch an object by its address.
 	
@@ -4374,6 +8087,10 @@ type Query {
 	"""
 	objects(first: Int, after: String, last: Int, before: String, filter: ObjectFilter!): ObjectConnection
 	"""
+	Allowed organization category labels (14 values).
+	"""
+	organizationCategories: [OrganizationCategory!]
+	"""
 	Fetch a package by its address.
 	
 	If `version` is specified, the package loaded is the one that shares its original ID with the package at `address`, but whose version is `version`.
@@ -4398,29 +8115,112 @@ type Query {
 	"""
 	packages(first: Int, after: String, last: Int, before: String, filter: PackageCheckpointFilter): MovePackageConnection
 	"""
+	Paid message escrow lifecycle rows for a wallet (latest status per message).
+	"""
+	paidMessageEscrows(address: MySoAddress!, limit: Int, offset: Int): [PaidMessageEscrow!]
+	"""
 	Fetch a platform by ID. Returns null if social DB not configured or not found.
 	"""
 	platform(id: ID!): Platform
+	"""
+	Platform configuration. Returns null when social DB not configured or no config.
+	"""
+	platformConfiguration: PlatformConfig
+	"""
+	Member, platform-block, and moderator flags for a wallet (single DB round-trip).
+	Returns null when social DB not configured.
+	"""
+	platformUserAccess(platform: ID!, user: MySoAddress!): PlatformUserAccess
 	"""
 	List platforms with optional approved filter. Returns empty when social DB not configured.
 	"""
 	platforms(approvedOnly: Boolean, limit: Int, offset: Int): [Platform!]
 	"""
+	PoC beneficiary vault by beneficiary wallet address. Returns null when social DB not configured or not found.
+	"""
+	pocBeneficiaryVaultByBeneficiary(beneficiary: MySoAddress!): PocBeneficiaryVault
+	"""
+	PoC beneficiary vault by on-chain vault object id. Returns null when social DB not configured or not found.
+	"""
+	pocBeneficiaryVaultByVaultId(vaultId: ID!): PocBeneficiaryVault
+	"""
+	Proof of Creativity configuration. Returns null when social DB not configured or no config.
+	"""
+	pocConfiguration: PocConfig
+	"""
+	List PoC username beneficiary provisions with optional status filter.
+	"""
+	pocUsernameBeneficiaries(status: Int, limit: Int, offset: Int): [PocUsernameBeneficiary!]
+	"""
+	PoC username beneficiaries claimed to `wallet` (the creator's `linkedWallet`). Unaffected
+	by adopting or releasing a reserved username.
+	"""
+	pocUsernameBeneficiariesByWallet(wallet: MySoAddress!): [PocUsernameBeneficiary!]
+	"""
+	PoC username beneficiary provision by on-chain beneficiary object id.
+	"""
+	pocUsernameBeneficiaryById(id: ID!): PocUsernameBeneficiary
+	"""
+	PoC username beneficiary provision by off-chain identity.
+	"""
+	pocUsernameBeneficiaryByIdentity(identitySource: Int!, identityHash: String!): PocUsernameBeneficiary
+	"""
+	PoC username beneficiary provision by username.
+	"""
+	pocUsernameBeneficiaryByUsername(username: String!): PocUsernameBeneficiary
+	"""
+	Popular MyData records (ordered by purchase + revenue + access counts). Returns empty when social DB not configured.
+	"""
+	popularMydata(limit: Int, offset: Int): [MyDataRecord!]
+	"""
 	Fetch a post by ID. Returns null if social DB not configured or not found.
 	"""
 	post(id: ID!): Post
 	"""
+	Post configuration. Returns null when social DB not configured or no config.
+	"""
+	postConfiguration: PostConfig
+	"""
 	List posts with optional filters. Returns empty when social DB not configured.
 	"""
-	posts(owner: String, postType: String, limit: Int, offset: Int): [Post!]
+	posts(owner: String, postType: String, subAgentId: String, limit: Int, offset: Int): [Post!]
 	"""
 	Fetch a social profile by owner address. Returns null if social DB not configured or not found.
 	"""
 	profile(address: MySoAddress!): Profile
 	"""
+	Profile configuration. Returns null when social DB not configured or no config.
+	"""
+	profileConfiguration: ProfileConfig
+	"""
+	Profile subscription by on-chain subscription object ID.
+	"""
+	profileSubscription(subscriptionId: ID!): ProfileSubscription
+	"""
+	Subscription plan by on-chain plan object ID.
+	"""
+	profileSubscriptionPlan(planId: ID!): ProfileSubscriptionPlan
+	"""
+	Subscription plans for a profile subscription service.
+	"""
+	profileSubscriptionPlans(serviceId: ID!, activeOnly: Boolean, limit: Int, offset: Int): [ProfileSubscriptionPlan!]
+	"""
+	Profile subscription service by on-chain service object ID.
+	"""
+	profileSubscriptionService(serviceId: ID!): ProfileSubscriptionService
+	"""
+	Active profile subscriptions for a subscriber (optional service filter).
+	"""
+	profileSubscriptions(subscriber: MySoAddress!, serviceId: ID, limit: Int, offset: Int): [ProfileSubscription!]
+	"""
 	List social profiles with pagination. Returns empty when social DB not configured.
 	"""
 	profiles(limit: Int, offset: Int): [Profile!]
+	"""
+	Profiles whose wallet holds a soulbound Verified X badge for one of `usernames`
+	(case-insensitive, leading `@` ignored). At most 100 usernames.
+	"""
+	profilesByXUsernames(usernames: [String!]!): [Profile!]
 	"""
 	List promoted posts (paginated, optionally filtered by platform). Returns empty when social DB not configured.
 	"""
@@ -4430,13 +8230,21 @@ type Query {
 	"""
 	promotion(id: ID!): Promotion
 	"""
+	Global promotion spending trends (last 30 days).
+	"""
+	promotionSpendingTrends(limit: Int): [PromotionTimeSeries!]
+	"""
 	Fetch a proposal by ID. Returns null when social DB not configured or not found.
 	"""
 	proposal(id: ID!): Proposal
 	"""
-	List governance proposals (paginated, optionally filtered by platform and status). Returns empty when social DB not configured.
+	List governance proposals (paginated, optionally filtered by platform, registry type, status, submitter). Returns empty when social DB not configured.
+	
+	`registryType` matches `Proposal.registryType` (0=ecosystem, 1=proof of creativity, 2=SPoT, 3=platform).
+	If `platformId` is set, the effective registry type comes from that platform's governance registry and `registryType` is ignored.
+	New on-chain proposals start in delegate review (`status` 1), not submitted (`status` 0).
 	"""
-	proposals(platformId: String, status: Int, limit: Int, offset: Int): [Proposal!]
+	proposals(platformId: String, registryType: Int, status: Int, submitter: String, limit: Int, offset: Int): [Proposal!]
 	"""
 	Fetch the protocol config by protocol version, or the latest protocol config used on chain if no version is provided.
 	"""
@@ -4473,13 +8281,68 @@ type Query {
 	"""
 	socialGraphFollowing(follower: MySoAddress!, following: MySoAddress!): Boolean
 	"""
+	Follow suggestions for a viewer browsing a profile (or wallet-only subject).
+	
+	Candidate pool is the subject's friends-of-friends. Filtering and ranking use the
+	viewer's following graph. When `viewer` is omitted, the subject is treated as the viewer.
+	"""
+	socialGraphRecommendations(subject: MySoAddress!, viewer: MySoAddress, limit: Int, offset: Int): [ProfileSummary!]
+	"""
+	Spot bet withdrawals for a post. Returns empty when social DB not configured.
+	"""
+	spotBetWithdrawals(postId: ID!, limit: Int, offset: Int): [SpotBetWithdrawal!]
+	"""
 	Spot bets for a post. Returns empty when social DB not configured.
 	"""
 	spotBets(postId: ID!, limit: Int, offset: Int): [SpotBet!]
 	"""
+	Indexed SpotClaim by on-chain object id.
+	"""
+	spotClaim(claimId: ID!): SpotClaim
+	"""
+	SPoT (Social Proof of Truth) configuration. Returns null when social DB not configured or no config.
+	"""
+	spotConfiguration: SpotConfig
+	"""
+	Aggregated SPoT creator earnings (claimed + pending).
+	"""
+	spotCreatorStats(creator: MySoAddress!): SpotCreatorStats
+	"""
+	Indexed SpotMarket by on-chain object id.
+	"""
+	spotMarket(marketId: ID!): SpotMarket
+	"""
+	Spot payouts for a post. Returns empty when social DB not configured.
+	"""
+	spotPayouts(postId: ID!, limit: Int, offset: Int): [SpotPayout!]
+	"""
+	Unclaimed pending creator payouts for a wallet.
+	"""
+	spotPendingCreatorPayouts(creator: MySoAddress!, limit: Int, offset: Int): [SpotPendingCreatorPayout!]
+	"""
 	Spot record for a post (1:1). Returns null when social DB not configured or no record.
 	"""
 	spotRecord(postId: ID!): SpotRecord
+	"""
+	Spot refunds for a post. Returns empty when social DB not configured.
+	"""
+	spotRefunds(postId: ID!, limit: Int, offset: Int): [SpotRefund!]
+	"""
+	Spot resolution for a post (1:1). Returns null when social DB not configured or not resolved.
+	"""
+	spotResolution(postId: ID!): SpotResolution
+	"""
+	Mandatory SPoT betting route: post → claim → open market.
+	"""
+	spotRoute(postId: ID!): SpotRoute
+	"""
+	SPT exchange configuration. Returns null when social DB not configured or no config.
+	"""
+	sptConfiguration: SptExchangeConfig
+	"""
+	Former reservation holders for a reservation pool id (withdrawn). Returns null when social DB not configured.
+	"""
+	sptFormerReservationHolders(poolId: ID!, viewer: MySoAddress, prioritizeFollowed: Boolean, limit: Int, offset: Int): [SptReservationHolding!]
 	"""
 	SPT holdings for a profile (holder address). Returns empty when social DB not configured.
 	"""
@@ -4489,13 +8352,51 @@ type Query {
 	"""
 	sptPool(id: ID!): SptPool
 	"""
+	List SPT pools with optional token type filter and sorting. Returns empty when social DB not configured.
+	"""
+	sptPools(tokenType: Int, sortBy: SptSortBy, order: SptOrder, limit: Int, offset: Int): [SptPool!]
+	"""
 	SPT price history. Provide profileAddress or poolId (at least one required). Returns empty when social DB not configured.
 	"""
 	sptPriceHistory(profileAddress: MySoAddress, poolId: ID, limit: Int): [SptPriceHistory!]
 	"""
+	Current reservation holders for a reservation pool id. Returns null when social DB not configured.
+	"""
+	sptReservationHolders(poolId: ID!, viewer: MySoAddress, prioritizeFollowed: Boolean, limit: Int, offset: Int): [SptReservationHolding!]
+	"""
+	Reservation deposit / withdrawal volume (`EVENT`, `FIVE_MIN`, `HOUR`, `DAY`). Returns empty when social DB not configured.
+	"""
+	sptReservationVolumeHistory(poolId: ID!, interval: SptReservationVolumeInterval!, limit: Int, from: String, to: String): [SptReservationVolumeBucket!]
+	"""
+	Fetch a sub-agent by derived address.
+	"""
+	subAgent(derivedAddress: MySoAddress!): SubAgent
+	"""
+	Fetch a sub-agent by on-chain object id.
+	"""
+	subAgentByObjectId(agentObjectId: String!): SubAgent
+	"""
+	Whether a subscriber currently has access to a profile subscription service.
+	"""
+	subscriptionAccess(subscriber: MySoAddress!, serviceId: ID!, minTierLevel: Int): SubscriptionAccess
+	subscriptionConfiguration: SubscriptionConfig
+	"""
+	Task market configuration (fees, windows, reputation parameters). Returns null when the
+	social DB is not configured or no `TaskConfigUpdated` has been indexed.
+	"""
+	taskConfiguration: TaskConfig
+	"""
 	Tips received for a post (paginated). Returns empty when social DB not configured.
 	"""
 	tips(postId: ID!, limit: Int, offset: Int): [TipSummary!]
+	"""
+	Top performing promotions by view count.
+	"""
+	topPerformingPromotions(limit: Int): [Promotion!]
+	"""
+	Personal SPT trader leaderboard. Window sorts use P/L / capital-at-risk, not delta lifetime ROI.
+	"""
+	traderReturnLeaderboard(window: SptReturnWindow, sort: TraderReturnSort, limit: Int, offset: Int): [TraderReturnLeaderboardEntry!]
 	"""
 	Fetch a transaction by its digest.
 	
@@ -4521,6 +8422,14 @@ type Query {
 	"""
 	type(type: String!): MoveType
 	"""
+	Check whether a username is available for registration.
+	"""
+	usernameAvailability(username: String!): UsernameAvailability
+	"""
+	Look up a username in the on-chain registry mirror. Returns null when not found.
+	"""
+	usernameRegistryEntry(username: String!): UsernameRegistry
+	"""
 	Verify a zkLogin signature os from the given `author`.
 	
 	Returns a `ZkLoginVerifyResult` where `success` is `true` and `error` is empty if the signature is valid. If the signature is invalid, `success` is `false` and `error` contains the relevant error message.
@@ -4534,7 +8443,7 @@ type Query {
 	"""
 	Vesting leaderboard by total vested amount. Returns empty when social DB not configured.
 	"""
-	vestingLeaderboard(limit: Int, offset: Int): VestingLeaderboardResponse
+	vestingLeaderboard(coinType: String, limit: Int, offset: Int): VestingLeaderboardResponse
 	"""
 	Fetch a vesting wallet by ID. Returns null if social DB not configured or not found.
 	"""
@@ -4542,7 +8451,11 @@ type Query {
 	"""
 	List vesting wallets with optional owner and active-only filters. Returns empty when social DB not configured.
 	"""
-	vestingWallets(owner: MySoAddress, activeOnly: Boolean, limit: Int, offset: Int): [VestingWallet!]
+	vestingWallets(owner: MySoAddress, coinType: String, activeOnly: Boolean, limit: Int, offset: Int): [VestingWallet!]
+	"""
+	Wallet identity (always resolves). Distinct from chain `address(address:)`.
+	"""
+	wallet(address: MySoAddress!): Wallet!
 }
 
 """
@@ -4578,8 +8491,13 @@ type RandomnessStateUpdateTransaction {
 }
 
 type ReactionSummary {
+	actionIdentityClass: Int!
+	actorAddress: MySoAddress!
+	attribution: SocialAttribution!
 	createdAt: Int!
+	principalOwner: MySoAddress
 	reactionText: String!
+	subAgentId: String
 	userAddress: MySoAddress!
 	"""
 	Profile of the user who reacted.
@@ -4608,6 +8526,43 @@ type Receiving {
 	object: Object
 }
 
+type RegistryJuryPolicy {
+	approvalBpsCommunity: Int!
+	approvalBpsCouncil: Int!
+	"""
+	The jury can decide a community vote that missed quorum or tied.
+	"""
+	communityStageEnabled: Boolean!
+	"""
+	The jury can take over the delegate council's review.
+	"""
+	councilStageEnabled: Boolean!
+	"""
+	How long the council has before the jury can take over; 0 means no deadline.
+	"""
+	councilWindowMs: Int!
+	"""
+	Share of the proposal's reward pool paid to jurors, in basis points.
+	"""
+	juryFeeBps: Int!
+	juryFeeCapMist: Int!
+	jurySize: Int!
+	"""
+	Proposals with a smaller reward pool skip the jury and behave as before.
+	"""
+	minPoolForJuryMist: Int!
+	"""
+	Reveals a round needs before it can decide.
+	"""
+	quorum: Int!
+	registryId: String!
+	"""
+	Size of the second, larger jury when the first cannot decide.
+	"""
+	round2Size: Int!
+	updatedAtMs: Int!
+}
+
 """
 Whether the currency is regulated or not.
 """
@@ -4623,6 +8578,7 @@ enum RegulatedState {
 }
 
 type RepostSummary {
+	attribution: SocialAttribution!
 	createdAt: Int!
 	originalPostId: String!
 	owner: MySoAddress!
@@ -4632,6 +8588,72 @@ type RepostSummary {
 	ownerProfile: ProfileSummary
 	profileId: String!
 	repostId: String!
+}
+
+type ResolvedObligation {
+	beneficiaryAddress: String!
+	beneficiaryAssetId: String
+	obligationIndex: Int!
+	obligationKind: Int!
+	shareBps: Int!
+	sourceLicenseInstanceId: String
+	sourceRelationshipId: Int
+}
+
+type ResolvedPolicy {
+	attributionRequired: Boolean!
+	commercialAllowed: Boolean!
+	derivativesAllowed: Boolean!
+	effectiveRights: Int!
+	lineageHash: String!
+	lineageJson: JSON
+	mediaAssetId: String!
+	obligations: [ResolvedObligation!]
+	policyVersion: Int!
+}
+
+type RevenueManifest {
+	entriesJson: JSON
+	"""
+	Beneficiaries on escrow entries with a non-zero share.
+	"""
+	escrowBeneficiaries: [String!]!
+	manifestVersion: Int!
+	postId: String!
+	"""
+	True when any manifest entry routes through escrow with a non-zero share.
+	"""
+	usesEscrowRedirect: Boolean!
+}
+
+type RewardDistribution {
+	amount: Int!
+	distributionTime: Int!
+	distributionType: String
+	proposalId: String!
+	recipientAddress: MySoAddress!
+}
+
+type RoleReputation {
+	"""
+	Share of the score that comes from reviews rather than the prior, in basis points.
+	"""
+	confidenceBps: Int!
+	"""
+	Counts of 1 through 5 star reviews, in that order.
+	"""
+	histogram: [Int!]!
+	lastReceiptId: String
+	reviewCount: Int!
+	"""
+	Bayesian score in stars.
+	"""
+	score: Float!
+	"""
+	Bayesian score in milli-stars (3076 is 3.076 stars).
+	"""
+	scoreMilli: Int!
+	updatedAt: Int
 }
 
 type SelectedBadge {
@@ -4828,15 +8850,84 @@ type SimulationResult {
 	outputs: [CommandResult!]
 }
 
+type SocialAttribution {
+	actionIdentityClass: Int!
+	actorAddress: MySoAddress!
+	organizationId: String
+	principalOwner: MySoAddress
+	subAgentId: String
+}
+
 type SocialProofToken {
+	basePrice: Int
+	"""
+	Circulating supply in nano-SPT (`10^9` units per display token).
+	After launch from a reservation pool, initial supply is 1:1 with net reserved MYSO
+	(`S0 = total_reserved` nano-SPT), before further trades.
+	"""
+	circulatingSupply: BigInt
+	"""
+	Circulating supply change percentage vs ~24h ago, or vs first indexed supply when the pool is younger than 24h.
+	"""
+	circulatingSupplyChange24H: Float
+	createdAt: Int
+	creatorEarnings: Int
+	currentPrice: Int
+	ecosystemEarnings: Int
+	"""
+	Former reservation holders (withdrawn; latest indexed balance zero per reserver).
+	"""
+	formerReservationHolders(viewer: MySoAddress, prioritizeFollowed: Boolean, limit: Int, offset: Int): [SptReservationHolding!]
 	isActive: Boolean!
+	"""
+	Market cap: current price (MYSO smallest units) × circulating supply (nano-SPT).
+	"""
+	marketCap: BigInt
+	"""
+	Market cap change percentage vs ~24h ago, or vs first indexed sample when the pool is younger than 24h.
+	"""
+	marketCapChange24H: Float
+	owner: MySoAddress
+	platformEarnings: Int
 	poolId: String
-	requiredThreshold: Int!
+	"""
+	Price change percentage vs ~24h ago, or vs first indexed price when the pool is younger than 24h.
+	"""
+	priceChange24H: Float
+	requiredThreshold: BigInt!
+	"""
+	Current reservation holders for this token’s reservation pool.
+	"""
+	reservationHolders(viewer: MySoAddress, prioritizeFollowed: Boolean, limit: Int, offset: Int): [SptReservationHolding!]
 	reservationPercentage: Float!
 	reservationPoolId: String
 	reservationStatus: String!
 	tokenAddress: String
-	totalReserved: Int!
+	tokenType: Int
+	totalReserved: BigInt!
+	volume24H: Int
+}
+
+type SpendApproval {
+	agentObjectId: String!
+	approvedBy: MySoAddress
+	balanceId: String!
+	expiresAtMs: BigInt
+	maxAmountMist: BigInt
+	organizationId: String
+	requestedAmountMist: BigInt
+	requestedAt: DateTime!
+	status: SpendApprovalStatus!
+	thresholdMist: BigInt
+	updatedAt: DateTime!
+}
+
+enum SpendApprovalStatus {
+	REQUESTED
+	APPROVED
+	CONSUMED
+	REVOKED
+	EXPIRED
 }
 
 """
@@ -4883,7 +8974,7 @@ type SpotBet {
 	"""
 	outcome: Int!
 	"""
-	Epoch timestamp when the bet was placed.
+	Unix milliseconds when the bet was placed (`Clock` on-chain when available).
 	"""
 	placedAt: Int!
 	"""
@@ -4900,6 +8991,202 @@ type SpotBet {
 	transactionId: String!
 }
 
+type SpotBetWithdrawal {
+	"""
+	Withdrawn amount.
+	"""
+	amount: Int!
+	"""
+	Fee taken on withdrawal.
+	"""
+	feeTaken: Int!
+	"""
+	Option ID the bet was on.
+	"""
+	optionId: Int!
+	"""
+	Transaction ID.
+	"""
+	transactionId: String!
+	"""
+	Address of the withdrawer.
+	"""
+	withdrawer: MySoAddress!
+	"""
+	Profile of the withdrawer.
+	"""
+	withdrawerProfile: ProfileSummary
+	"""
+	Unix milliseconds when the withdrawal was recorded (checkpoint / chain time).
+	"""
+	withdrawnAt: Int!
+}
+
+type SpotClaim {
+	claimId: MySoAddress!
+	createdAtMs: Int
+	semanticClaimHash: String
+}
+
+type SpotClaimEarnings {
+	claimId: MySoAddress!
+	totalAmount: Int!
+}
+
+type SpotClaimVerdict {
+	claimIndex: Int!
+	evidenceManifestHash: String!
+	evidenceUrls: [String!]!
+	policyHash: String!
+	relatedClaimId: String
+	relatedMarketId: String
+	summary: String
+	verdict: SpotClaimVerdictValue!
+}
+
+"""
+Verdict value for a verified past claim.
+"""
+enum SpotClaimVerdictValue {
+	TRUE
+	FALSE
+	UNVERIFIABLE
+}
+
+type SpotConfig {
+	"""
+	Confidence threshold in basis points.
+	"""
+	confidenceThresholdBps: Int!
+	"""
+	Window after resolution during which creators may claim referral rewards.
+	"""
+	creatorClaimWindowMs: Int!
+	"""
+	Creator referral fee in basis points (default 100 = 1.00%).
+	"""
+	creatorFeeBps: Int!
+	"""
+	Ecosystem treasury fee as a direct percentage of gross bet amount, in basis points (10000 = 100%).
+	"""
+	ecosystemFeeBps: Int!
+	"""
+	Share of expired unclaimed creator rewards routed to ecosystem on reclaim.
+	"""
+	expiredCreatorEcosystemBps: Int!
+	"""
+	Maximum bets allowed per SPoT record.
+	"""
+	maxBetsPerRecord: Int!
+	"""
+	Maximum number of betting options allowed on a SPoT record.
+	"""
+	maxBettingOptions: Int!
+	"""
+	Maximum claims per post at finalize time (Move range 1–20).
+	"""
+	maxClaimPerPost: Int!
+	"""
+	Maximum number of evidence URLs allowed on a SPoT record.
+	"""
+	maxEvidenceUrls: Int!
+	"""
+	Maximum reasoning text length allowed when creating a SPoT record.
+	"""
+	maxReasoningLength: Int!
+	"""
+	Max resolution window duration in milliseconds.
+	"""
+	maxResolutionWindowMs: Int!
+	"""
+	Max single bet amount.
+	"""
+	maxSingleBet: Int!
+	"""
+	Minimum number of betting options required on a SPoT record.
+	"""
+	minBettingOptions: Int!
+	"""
+	Minimum reasoning text length required when creating a SPoT record.
+	"""
+	minReasoningLength: Int!
+	"""
+	Oracle address for resolution.
+	"""
+	oracleAddress: String!
+	"""
+	Payout delay in milliseconds.
+	"""
+	payoutDelayMs: Int!
+	"""
+	Platform fee as a direct percentage of gross bet amount, in basis points (10000 = 100%).
+	"""
+	platformFeeBps: Int!
+	"""
+	Resolution window duration in milliseconds (global default).
+	"""
+	resolutionWindowMs: Int!
+	"""
+	Shared SPoT GovernanceDAO object ID (registry_type = 2).
+	"""
+	spotGovernanceRegistryId: String
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID of the last config update.
+	"""
+	transactionId: String!
+	"""
+	Whether SPoT (Social Proof of Truth) is enabled.
+	"""
+	truthEnabled: Boolean!
+	"""
+	Last updated timestamp (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Address that last updated the configuration.
+	"""
+	updatedBy: String!
+	"""
+	Configuration version.
+	"""
+	version: Int!
+}
+
+type SpotCreatorStats {
+	creator: MySoAddress!
+	earningsByMarket: [SpotMarketEarnings!]!
+	earningsByPost: [SpotPostEarnings!]!
+	earningsLast30D: Int!
+	lifetimeEarnings: Int!
+	pendingEarnings: Int!
+	topClaims: [SpotClaimEarnings!]!
+}
+
+type SpotMarket {
+	bettingOptions: [String!]!
+	claim: SpotClaim
+	claimId: MySoAddress!
+	createdAtMs: Int
+	creatorFeeTotal: Int
+	deadlineMs: Int
+	marketId: MySoAddress!
+	marketKeyHash: String
+	primaryPostId: String
+	resolutionAtMs: Int
+	resolutionTimestampMs: Int
+	status: Int!
+	winnerPool: Int
+}
+
+type SpotMarketEarnings {
+	marketId: MySoAddress!
+	totalAmount: Int!
+}
+
 type SpotOptionEscrow {
 	"""
 	Escrow amount for this option.
@@ -4911,43 +9198,128 @@ type SpotOptionEscrow {
 	optionId: Int!
 }
 
+type SpotPayout {
+	"""
+	Payout amount.
+	"""
+	amount: Int!
+	"""
+	Unix milliseconds when the payout was recorded (checkpoint / chain time).
+	"""
+	paidAt: Int!
+	"""
+	Address of the payout recipient.
+	"""
+	recipient: MySoAddress!
+	"""
+	Profile of the recipient.
+	"""
+	recipientProfile: ProfileSummary
+	"""
+	Transaction ID.
+	"""
+	transactionId: String!
+}
+
+type SpotPendingCreatorPayout {
+	amount: Int!
+	creator: MySoAddress!
+	expiresAtMs: Int!
+	isClaimable: Boolean!
+	isExpired: Boolean!
+	marketId: MySoAddress!
+	payoutId: Int!
+	referrerPostId: String!
+}
+
+type SpotPostAnalysis {
+	claimManifestHash: String
+	detectedClaimCount: Int!
+	finalizeTxDigest: String
+	futureAcceptedCount: Int!
+	maxClaimPerPost: Int!
+	pastVerifiedCount: Int!
+	rejectedClaimCount: Int!
+	status: SpotPostAnalysisStatus!
+	truncatedClaimCount: Int!
+	veracityManifestHash: String
+}
+
+"""
+Multi-claim SPoT analysis status.
+"""
+enum SpotPostAnalysisStatus {
+	PENDING
+	COMPLETED
+	COMPLETED_NO_ACTIONABLE
+}
+
+type SpotPostEarnings {
+	referrerPostId: String!
+	totalAmount: Int!
+}
+
 type SpotRecord {
+	"""
+	Active SPoT governance proposal id while debate is open.
+	"""
+	activeProposalId: String
 	"""
 	Betting option labels (e.g. ["Yes", "No"]).
 	"""
 	bettingOptions: [String!]!
 	"""
-	Epoch when the record was created.
+	Unix milliseconds when the record was created (`Clock`).
 	"""
-	createdEpoch: Int!
+	createdAtMs: Int!
 	"""
-	Last resolution epoch.
+	Wall-clock ms when oracle escalated to DAO_REQUIRED.
 	"""
-	lastResolutionEpoch: Int
+	daoEscalatedAtMs: Int
 	"""
-	Max resolution window in epochs.
+	Last resolution instant (Unix ms), if resolved.
 	"""
-	maxResolutionWindowEpochs: Int
+	lastResolutionAtMs: Int
+	"""
+	Max resolution window duration in milliseconds.
+	"""
+	maxResolutionWindowMs: Int
 	"""
 	Escrow amount per option (option_id -> amount).
 	"""
 	optionEscrow: [SpotOptionEscrow!]!
 	"""
+	Oracle-suggested outcome when escalated to DAO_REQUIRED.
+	"""
+	oracleProposedOutcome: Int
+	"""
 	Post ID this record is for.
 	"""
 	postId: String!
+	"""
+	Linked governance proposal (when active_proposal_id is set).
+	"""
+	proposal: Proposal
+	"""
+	Outcome under community ratification in the active proposal.
+	"""
+	proposedOutcome: Int
 	"""
 	Unique record identifier.
 	"""
 	recordId: String!
 	"""
+	On-chain SpotRecord object id.
+	"""
+	recordObjectId: String
+	"""
 	Resolved outcome (when resolved).
 	"""
 	resolution: Int
 	"""
-	Resolution window in epochs.
+	Resolution window duration in milliseconds.
 	"""
-	resolutionWindowEpochs: Int
+	resolutionWindowMs: Int
 	"""
 	Record status (1=open, 2=dao_required, 3=resolved, 4=refundable).
 	"""
@@ -4956,6 +9328,200 @@ type SpotRecord {
 	Total escrow across all options.
 	"""
 	totalEscrow: Int!
+	"""
+	Transaction ID of the record creation/update.
+	"""
+	transactionId: String!
+	"""
+	On-chain contract version for this SPoT record object.
+	"""
+	version: Int!
+}
+
+type SpotRefund {
+	"""
+	Refund amount.
+	"""
+	amount: Int!
+	"""
+	Address of the refund recipient.
+	"""
+	recipient: MySoAddress!
+	"""
+	Profile of the recipient.
+	"""
+	recipientProfile: ProfileSummary
+	"""
+	Unix milliseconds when the refund was recorded (checkpoint / chain time).
+	"""
+	refundedAt: Int!
+	"""
+	Transaction ID.
+	"""
+	transactionId: String!
+}
+
+type SpotResolution {
+	"""
+	Evidence URLs (required for resolution).
+	"""
+	evidenceUrls: [String!]!
+	"""
+	Fee taken at resolution.
+	"""
+	feeTaken: Int!
+	"""
+	Resolved outcome (winning option_id).
+	"""
+	outcome: Int!
+	"""
+	Oracle reasoning for the resolution.
+	"""
+	reasoning: String!
+	"""
+	Unix milliseconds when the record was resolved (checkpoint / chain time).
+	"""
+	resolvedAtMs: Int!
+	"""
+	Total escrow at resolution.
+	"""
+	totalEscrow: Int!
+	"""
+	Transaction ID.
+	"""
+	transactionId: String!
+}
+
+type SpotRoute {
+	claimId: MySoAddress
+	linkKind: String
+	postId: String!
+	routingReason: String!
+	spotClaim: SpotClaim
+	spotMarket: SpotMarket
+	targetMarketId: MySoAddress
+}
+
+type SptCreatorFeeSettlement {
+	creatorFee: BigInt!
+	eventId: String!
+	poolId: String!
+	sourcePostId: String
+	timestamp: String!
+	trader: MySoAddress!
+	vaultAmount: BigInt!
+	walletAmount: BigInt!
+}
+
+type SptExchangeConfig {
+	"""
+	Protocol launch price: always 1 MYSO per SPT (`1e9` nano). Not admin-configurable.
+	"""
+	basePrice: Int!
+	"""
+	Creator fee in basis points.
+	"""
+	creatorFeeBps: Int!
+	"""
+	Max hold percentage in basis points.
+	"""
+	maxHoldPercentBps: Int!
+	"""
+	Per-wallet reservation cap for **post** pools: `(postThreshold * maxIndividualReservationBps) / 10000` in MYSO base units (matches on-chain `social_proof_tokens`).
+	"""
+	maxIndividualReservationAmountPost: Int!
+	"""
+	Per-wallet reservation cap for **profile** pools: `(profileThreshold * maxIndividualReservationBps) / 10000` in MYSO base units.
+	"""
+	maxIndividualReservationAmountProfile: Int!
+	"""
+	Max share of the pool threshold any single wallet may reserve, in basis points (10000 = 100%).
+	"""
+	maxIndividualReservationBps: Int!
+	"""
+	Max reservers per pool.
+	"""
+	maxReserversPerPool: Int!
+	"""
+	Share of the non-platform platform fee routed to the creator, in basis points (10000 = 100%).
+	"""
+	nonPlatformPlatformToCreatorBps: Int!
+	"""
+	Share of the non-platform platform fee routed to the ecosystem treasury, in basis points (10000 = 100%).
+	"""
+	nonPlatformPlatformToTreasuryBps: Int!
+	"""
+	Platform fee in basis points.
+	"""
+	platformFeeBps: Int!
+	"""
+	Total MYSO required to reserve toward a post before the pool can graduate (global config).
+	"""
+	postThreshold: Int!
+	"""
+	Total MYSO required to reserve toward a profile before the pool can graduate (global config).
+	"""
+	profileThreshold: Int!
+	"""
+	Quadratic coefficient for pricing curve.
+	"""
+	quadraticCoefficient: Int!
+	"""
+	Reservation creator fee in basis points.
+	"""
+	reservationCreatorFeeBps: Int!
+	"""
+	Reservation platform fee in basis points.
+	"""
+	reservationPlatformFeeBps: Int!
+	"""
+	Reservation treasury fee in basis points.
+	"""
+	reservationTreasuryFeeBps: Int!
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Total fee in basis points.
+	"""
+	totalFeeBps: Int!
+	"""
+	Trading creator fee in basis points.
+	"""
+	tradingCreatorFeeBps: Int!
+	"""
+	Whether trading is enabled.
+	"""
+	tradingEnabled: Boolean!
+	"""
+	Trading platform fee in basis points.
+	"""
+	tradingPlatformFeeBps: Int!
+	"""
+	Trading treasury fee in basis points.
+	"""
+	tradingTreasuryFeeBps: Int!
+	"""
+	Transaction ID of last update.
+	"""
+	transactionId: String!
+	"""
+	Treasury fee in basis points.
+	"""
+	treasuryFeeBps: Int!
+	"""
+	Last updated timestamp (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Address that last updated the configuration.
+	"""
+	updatedBy: String!
+	"""
+	Configuration version.
+	"""
+	version: Int!
 }
 
 type SptHolding {
@@ -4964,20 +9530,91 @@ type SptHolding {
 	"""
 	address: MySoAddress!
 	"""
-	Token balance held.
+	Token balance held (nano-SPT).
 	"""
-	amount: Int!
+	amount: BigInt!
 	"""
-	Profile whose token this holding represents.
+	Profile or post object id this SPT is tied to (subject of the token).
+	"""
+	associatedId: String!
+	"""
+	Holder blocked the viewer.
+	"""
+	blockedBySubject: Boolean
+	"""
+	Viewer blocked the holder.
+	"""
+	blockedByViewer: Boolean
+	"""
+	Personal investment metrics for this holding.
+	"""
+	metrics: SptPositionMetrics
+	"""
+	Post for this holding when `tokenType` is post; null for profile SPTs or if the post is not indexed.
+	"""
+	post: Post
+	"""
+	Token pool owner / creator (author) profile, not the post content for post SPTs.
 	"""
 	profile: ProfileSummary!
+	"""
+	Token type (`1` = profile, `2` = post).
+	"""
+	tokenType: Int!
+	"""
+	Holder follows the viewer.
+	"""
+	viewerFollowsViewer: Boolean
+	"""
+	Viewer follows the holder (requires `viewer` on [`SptPool.holders`]).
+	"""
+	viewerIsFollowing: Boolean
+}
+
+enum SptOrder {
+	DESC
+	ASC
 }
 
 type SptPool {
 	"""
-	Token name.
+	Circulating supply change percentage vs ~24h ago, or vs first indexed supply when the pool is younger than 24h.
 	"""
-	name: String!
+	circulatingSupplyChange24H: Float
+	"""
+	Total creator fees earned.
+	"""
+	creatorEarnings: Int
+	"""
+	Auditable creator-fee routing for vault-aware trades. This supplements,
+	and never duplicates, the accounting in `transactions`.
+	"""
+	creatorFeeSettlements(limit: Int, offset: Int): [SptCreatorFeeSettlement!]
+	"""
+	Total ecosystem/treasury fees earned.
+	"""
+	ecosystemEarnings: Int
+	"""
+	Former reservation holders (withdrawn; latest indexed balance zero per reserver).
+	"""
+	formerReservationHolders(viewer: MySoAddress, prioritizeFollowed: Boolean, limit: Int, offset: Int): [SptReservationHolding!]
+	"""
+	Current holders of this token (paginated, ordered by balance DESC).
+	"""
+	holders(viewer: MySoAddress, prioritizeFollowed: Boolean, limit: Int, offset: Int): [SptHolding!]
+	"""
+	Nano-SPT minted at launch (`S0`). Price is 1 MYSO per SPT at or below this supply.
+	"""
+	launchSupply: BigInt!
+	"""
+	Market cap (price in MYSO smallest units × circulating supply in nano-SPT).
+	"""
+	marketCap: BigInt!
+	"""
+	Market cap change percentage vs ~24h ago, or vs first indexed sample when the pool is younger than 24h.
+	Uses price and circulating supply from the same historical row as `priceChange24H`.
+	"""
+	marketCapChange24H: Float
 	"""
 	Pool owner address.
 	"""
@@ -4987,6 +9624,10 @@ type SptPool {
 	"""
 	ownerProfile: ProfileSummary
 	"""
+	Total platform fees earned.
+	"""
+	platformEarnings: Int
+	"""
 	Pool ID.
 	"""
 	poolId: String!
@@ -4995,32 +9636,107 @@ type SptPool {
 	"""
 	price: Int!
 	"""
+	Price change percentage vs ~24h ago, or vs first indexed price when the pool is younger than 24h.
+	"""
+	priceChange24H: Float
+	"""
 	Price history for this pool.
 	"""
 	priceHistory(limit: Int, offset: Int): [SptPriceHistory!]
 	"""
-	Token symbol.
+	Current reservation holders for this pool’s reservation phase (same `associated_id`).
 	"""
-	symbol: String!
+	reservationHolders(viewer: MySoAddress, prioritizeFollowed: Boolean, limit: Int, offset: Int): [SptReservationHolding!]
+	"""
+	Atomic SPT→SPT swaps where this pool is the source or destination.
+	"""
+	swaps(limit: Int, offset: Int): [SptSwap!]
 	"""
 	Token type (1=profile, 2=post).
 	"""
 	tokenType: Int!
 	"""
-	Total circulating supply.
+	Total circulating supply (nano-SPT).
 	"""
-	totalSupply: Int!
+	totalSupply: BigInt!
 	"""
 	Recent transactions for this pool.
 	"""
-	transactions(limit: Int, offset: Int): [SptTransaction!]
+	transactions(viewer: MySoAddress, prioritizeFollowed: Boolean, limit: Int, offset: Int): [SptTransaction!]
+	"""
+	P2P SPT transfers for this pool.
+	"""
+	transfers(limit: Int, offset: Int): [SptTransfer!]
+	"""
+	24-hour trading volume (MYSO).
+	"""
+	volume24H: Int
+}
+
+type SptPortfolioMetrics {
+	currentValueMyso: Int!
+	disposedCostBasisMyso: Int!
+	holderAddress: String!
+	lifetimeNetPlMyso: Int!
+	lifetimeRoiPct: Float
+	positions: [SptPositionMetrics!]!
+	realizedPlMyso: Int!
+	realizedRoiPct: Float
+	totalInvestedMyso: Int!
+	totalReturnedMyso: Int!
+	unrealizedPlMyso: Int!
+}
+
+type SptPositionMetrics {
+	avgEntryPrice: Int
+	avgExitPrice: Int
+	costBasisUnknown: Boolean!
+	currentValueMyso: Int!
+	disposedCostBasisMyso: Int!
+	lifetimeNetPlMyso: Int!
+	lifetimeRoiPct: Float
+	poolId: String!
+	realizedPlMyso: Int!
+	"""
+	Realized ROI uses disposed cost basis, not total invested.
+	"""
+	realizedRoiPct: Float
+	"""
+	Full-precision share of circulating supply (not basis points).
+	"""
+	supplyPct: Float
+	tokenBalance: Int!
+	totalInvestedMyso: Int!
+	totalReturnedMyso: Int!
+	unrealizedPlMyso: Int!
+	unrealizedRoiPct: Float
+	"""
+	Cost basis at window start plus net buys in window.
+	"""
+	windowCapitalAtRiskMyso: Int!
+	"""
+	Window P/L (realized + mark-to-market). Default window is 24h.
+	"""
+	windowPlMyso: Int!
+	"""
+	`windowPl / capitalAtRisk` for 24h. Not token price % and not lifetime ROI.
+	"""
+	windowReturnPct: Float
+}
+
+type SptPositionTimeSeriesPoint {
+	markValueMyso: Int!
+	supplyPct: Float
+	time: String!
+	tokenBalance: Int!
+	unrealizedRoiPct: Float
 }
 
 type SptPriceHistory {
 	"""
-	Circulating supply at this point.
+	Circulating supply at this point (nano-SPT).
 	"""
-	circulatingSupply: Int!
+	circulatingSupply: BigInt!
 	"""
 	Pool ID.
 	"""
@@ -5039,15 +9755,240 @@ type SptPriceHistory {
 	transactionId: String!
 }
 
+type SptReservationHolding {
+	"""
+	Reserved amount.
+	"""
+	amount: BigInt!
+	"""
+	Profile or post object id this reservation pool is for (subject of the token).
+	"""
+	associatedId: String!
+	blockedBySubject: Boolean
+	blockedByViewer: Boolean
+	"""
+	Reservation pool ID.
+	"""
+	poolId: String!
+	"""
+	Pool status (e.g. active, threshold_met).
+	"""
+	poolStatus: String!
+	"""
+	Post for this reservation when `tokenType` is post; null for profile SPTs or if the post is not indexed.
+	"""
+	post: Post
+	"""
+	Token pool owner / creator (author) profile, not the post content for post SPTs.
+	"""
+	profile: ProfileSummary!
+	"""
+	Required threshold for the pool.
+	"""
+	requiredThreshold: BigInt!
+	"""
+	Epoch timestamp when reserved.
+	"""
+	reservedAt: Int!
+	"""
+	Wallet that made the reservation.
+	"""
+	reserver: MySoAddress!
+	"""
+	Profile of the reserver (when indexed).
+	"""
+	reserverProfile: ProfileSummary
+	"""
+	Whether the reservation pool threshold is met.
+	"""
+	thresholdMet: Boolean!
+	"""
+	Token type (`1` = profile, `2` = post).
+	"""
+	tokenType: Int!
+	"""
+	Total reserved across all reservers in this pool.
+	"""
+	totalReserved: BigInt!
+	viewerFollowsViewer: Boolean
+	viewerIsFollowing: Boolean
+}
+
+type SptReservationVolumeBucket {
+	"""
+	Exclusive end of the bucket, Unix epoch seconds (UTC).
+	"""
+	bucketEnd: Int!
+	"""
+	Start of the bucket, Unix epoch seconds (UTC).
+	"""
+	bucketStart: Int!
+	"""
+	Number of deposit events in the bucket.
+	"""
+	depositCount: Int!
+	"""
+	MYSO volume from reservation deposits (positive `amount` rows) in this bucket.
+	"""
+	depositVolume: BigInt!
+	"""
+	Earliest indexer time in this bucket, Unix epoch seconds (UTC).
+	"""
+	earliestAt: Int!
+	"""
+	Latest indexer time in this bucket, Unix epoch seconds (UTC).
+	"""
+	latestAt: Int!
+	"""
+	Number of withdrawal events in the bucket.
+	"""
+	withdrawalCount: Int!
+	"""
+	MYSO volume from reservation withdrawals (negative `amount` rows) in this bucket.
+	"""
+	withdrawalVolume: BigInt!
+}
+
+enum SptReservationVolumeInterval {
+	EVENT
+	FIVE_MIN
+	HOUR
+	DAY
+}
+
+enum SptReturnWindow {
+	HOURS_24
+	DAYS_7
+	DAYS_30
+	DAYS_180
+	DAYS_365
+	ALL
+}
+
+enum SptSortBy {
+	PRICE
+	MARKET_CAP
+	PRICE_CHANGE_2_4H
+	VOLUME_2_4H
+	CREATOR_EARNINGS
+	PLATFORM_EARNINGS
+	ECOSYSTEM_EARNINGS
+	TOTAL_EARNINGS
+	CREATED_AT
+}
+
+"""
+Atomic SPT→SPT swap summary. SUMMARY ONLY: the per-pool balance/price/fee effects are
+reflected by the underlying BUY/SELL [`SptTransaction`] legs (see `isSwapLeg`).
+"""
+type SptSwap {
+	"""
+	Creator fee on the buy leg.
+	"""
+	buyCreatorFee: BigInt!
+	"""
+	Total fees on the buy leg.
+	"""
+	buyFeeAmount: BigInt!
+	"""
+	Gross MYSO spent on the buy leg.
+	"""
+	buyMysoGross: BigInt!
+	"""
+	Platform fee on the buy leg.
+	"""
+	buyPlatformFee: BigInt!
+	"""
+	Treasury fee on the buy leg.
+	"""
+	buyTreasuryFee: BigInt!
+	"""
+	Nano-SPT bought into the destination pool.
+	"""
+	destAmount: BigInt!
+	"""
+	Destination pool price after the swap (smallest units).
+	"""
+	destNewPrice: Int!
+	"""
+	Destination pool the trader bought into.
+	"""
+	destPoolId: String!
+	"""
+	MYSO returned to the trader after the buy leg (unspent proceeds).
+	"""
+	leftoverMyso: BigInt!
+	"""
+	Nano-SPT sold from the source pool.
+	"""
+	sellAmount: BigInt!
+	"""
+	Creator fee on the sell leg.
+	"""
+	sellCreatorFee: BigInt!
+	"""
+	Total fees on the sell leg.
+	"""
+	sellFeeAmount: BigInt!
+	"""
+	Gross MYSO realized from the sell leg.
+	"""
+	sellMysoGross: BigInt!
+	"""
+	Platform fee on the sell leg.
+	"""
+	sellPlatformFee: BigInt!
+	"""
+	Treasury fee on the sell leg.
+	"""
+	sellTreasuryFee: BigInt!
+	"""
+	Source pool price after the swap (smallest units).
+	"""
+	sourceNewPrice: Int!
+	"""
+	Source pool the trader sold from.
+	"""
+	sourcePoolId: String!
+	"""
+	Swap timestamp (ISO 8601).
+	"""
+	timestamp: String!
+	"""
+	Trader wallet address.
+	"""
+	trader: MySoAddress!
+	"""
+	Transaction digest shared by both swap legs.
+	"""
+	transactionId: String!
+}
+
 type SptTransaction {
 	"""
-	Token amount.
+	Token amount (nano-SPT).
 	"""
-	amount: Int!
+	amount: BigInt!
+	"""
+	Sender blocked the viewer.
+	"""
+	blockedBySubject: Boolean
+	"""
+	Viewer blocked the sender.
+	"""
+	blockedByViewer: Boolean
+	"""
+	Opposite pool ID when this row is one leg of an SPT→SPT swap; null otherwise.
+	"""
+	counterpartyPoolId: String
 	"""
 	Sender address.
 	"""
 	from: MySoAddress!
+	"""
+	`true` when this BUY/SELL row is one leg of an atomic SPT→SPT swap.
+	"""
+	isSwapLeg: Boolean!
 	"""
 	Transaction timestamp (ISO 8601).
 	"""
@@ -5060,6 +10001,44 @@ type SptTransaction {
 	Transaction type (BUY or SELL).
 	"""
 	type: String!
+	"""
+	Sender follows the viewer.
+	"""
+	viewerFollowsViewer: Boolean
+	"""
+	Viewer follows the trade sender (requires `viewer` on [`SptPool.transactions`]).
+	"""
+	viewerIsFollowing: Boolean
+}
+
+"""
+P2P SPT transfer summary. Holdings are updated via delta rows; supply/price unchanged.
+"""
+type SptTransfer {
+	"""
+	Nano-SPT transferred.
+	"""
+	amount: BigInt!
+	"""
+	Sender wallet.
+	"""
+	from: MySoAddress!
+	"""
+	Pool ID.
+	"""
+	poolId: String!
+	"""
+	Transfer timestamp (ISO 8601).
+	"""
+	timestamp: String!
+	"""
+	Recipient wallet.
+	"""
+	to: MySoAddress!
+	"""
+	Transaction digest.
+	"""
+	transactionId: String!
 }
 
 """
@@ -5115,6 +10094,169 @@ type StoreExecutionTimeObservationsTransaction {
 }
 
 
+type SubAgent {
+	active: Boolean!
+	agentObjectId: String!
+	budget: AiCreditAgentBudget
+	capabilities: Int!
+	children(activeOnly: Boolean, limit: Int, offset: Int): [SubAgent!]
+	createdAt: Int!
+	delegatableCaps: Int!
+	depth: Int!
+	derivedAddress: MySoAddress!
+	expiresAt: Int
+	identityClass: Int!
+	label: String!
+	maxActionSpend: Int
+	memoryVaultId: String
+	orgMemoryPermissions: [OrgMemoryPermission!]
+	orgRoles: [OrgRoleAssignment!]
+	organizationId: String
+	parentObjectId: String
+	platformScope: MySoAddress
+	"""
+	P&L for this agent (MYSO base units), net of its AI credit spend. Available for
+	revoked and deactivated agents too. `windows` defaults to 7d, 30d and all-time.
+	"""
+	pnl(windows: [ProfilePnLWindow!]): SubAgentPnl
+	registerScope: Int!
+	registeredBy: MySoAddress!
+	"""
+	Reputation earned as a task seller and as a task buyer, the blended overall score, and
+	the principal's credibility. A new agent returns the prior with zero reviews.
+	"""
+	reputation: AgentReputation
+	roleTags: Int!
+}
+
+"""
+Lifetime P&L: SPT trading P&L (realized + unrealized) + non-swap inbound payouts - AI spend.
+"""
+type SubAgentLifetimePnl {
+	aiSpendMyso: Int!
+	grossInboundMyso: Int!
+	netPnlMyso: Int!
+	realizedPlMyso: Int!
+	tradingPlMyso: Int!
+	unrealizedPlMyso: Int!
+}
+
+type SubAgentPnl {
+	agent: SubAgent!
+	lifetime: SubAgentLifetimePnl!
+	"""
+	SPT positions held at the agent's derived address (weighted-average cost).
+	"""
+	sptPortfolio: SptPortfolioMetrics!
+	status: SubAgentStatus!
+	"""
+	Per-window cash-flow P&L net of AI spend; empty when not requested.
+	"""
+	windows: [SubAgentWindowPnl!]!
+}
+
+type SubAgentPnlSummary {
+	"""
+	One page of agents with windowed stats.
+	"""
+	agents: [SubAgentPnl!]!
+	totalCount: Int!
+	"""
+	Roll-up over all agents, not just this page.
+	"""
+	totals: SubAgentPnlTotals!
+}
+
+"""
+Roll-up across every sub-agent of a principal, including revoked and deactivated ones.
+"""
+type SubAgentPnlTotals {
+	activeCount: Int!
+	agentCount: Int!
+	aiSpendMyso: Int!
+	deactivatedCount: Int!
+	grossInboundMyso: Int!
+	netPnlMyso: Int!
+	realizedPlMyso: Int!
+	revokedCount: Int!
+	tradingPlMyso: Int!
+	unrealizedPlMyso: Int!
+}
+
+enum SubAgentStatus {
+	ACTIVE
+	DEACTIVATED
+	REVOKED
+}
+
+"""
+One window of an agent's cash-flow P&L, net of its AI credit spend.
+"""
+type SubAgentWindowPnl {
+	"""
+	AI credit spend recorded for the agent in the window.
+	"""
+	aiSpendMyso: Int!
+	cashFlow: ProfilePnLWindowStats!
+	"""
+	`cashFlow.netCashFlowMyso - aiSpendMyso`.
+	"""
+	netCashFlowAfterAiMyso: Int!
+	window: ProfilePnLWindow!
+}
+
+type SubscriptionAccess {
+	expiresAt: Int
+	hasAccess: Boolean!
+}
+
+type SubscriptionConfig {
+	"""
+	Billing period duration in milliseconds.
+	"""
+	defaultBillingPeriodMs: Int!
+	"""
+	Ecosystem treasury fee in bps deducted from gross subscription payments (default 250 = 2.5%).
+	"""
+	ecosystemFeeBps: Int!
+	"""
+	Maximum number of renewal months permitted per subscription.
+	"""
+	maxRenewalMonths: Int!
+	"""
+	When no platform is present, share of the platform fee bucket routed to creators (bps).
+	"""
+	nonPlatformPlatformToCreatorBps: Int!
+	"""
+	When no platform is present, share of the platform fee bucket routed to ecosystem treasury (bps).
+	"""
+	nonPlatformPlatformToTreasuryBps: Int!
+	"""
+	Platform fee in bps deducted from gross subscription payments (default 250 = 2.5%).
+	"""
+	platformFeeBps: Int!
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Transaction ID of the last config update.
+	"""
+	transactionId: String!
+	"""
+	Last updated timestamp (epoch milliseconds).
+	"""
+	updatedAt: Int!
+	"""
+	Address that last updated the configuration.
+	"""
+	updatedBy: String!
+	"""
+	Configuration version.
+	"""
+	version: Int!
+}
+
 """
 Future behavior of a currency's supply.
 """
@@ -5129,9 +10271,140 @@ enum SupplyState {
 	FIXED
 }
 
+"""
+Task market configuration: fees, windows, and the reputation weighting parameters.
+"""
+type TaskConfig {
+	"""
+	Default acceptance window offered by clients.
+	"""
+	acceptWindowDefaultMs: Int!
+	"""
+	Longest acceptance window.
+	"""
+	acceptWindowMaxMs: Int!
+	"""
+	Shortest time a seller has to accept an offer.
+	"""
+	acceptWindowMinMs: Int!
+	"""
+	Whether new offers are accepted. Existing tasks continue regardless.
+	"""
+	active: Boolean!
+	"""
+	Credibility of a principal with no settled history.
+	"""
+	credBaseBps: Int!
+	"""
+	Settled transactions after which credibility stops rising.
+	"""
+	credCapN: Int!
+	"""
+	Credibility ceiling.
+	"""
+	credMaxBps: Int!
+	"""
+	Credibility gained per settled transaction.
+	"""
+	credStepBps: Int!
+	"""
+	Longest delivery window.
+	"""
+	deliveryWindowMaxMs: Int!
+	"""
+	Shortest delivery window after acceptance.
+	"""
+	deliveryWindowMinMs: Int!
+	"""
+	Ecosystem fee in basis points, frozen into each offer.
+	"""
+	ecosystemFeeBps: Int!
+	"""
+	Recipient of the ecosystem fee.
+	"""
+	ecosystemFeeRecipient: String!
+	"""
+	Longest task title in bytes.
+	"""
+	maxTitleBytes: Int!
+	"""
+	Longest deliverable URI in bytes.
+	"""
+	maxUriBytes: Int!
+	"""
+	Cap on the value-derived review weight.
+	"""
+	maxValueWeightBps: Int!
+	"""
+	Smallest escrow an offer may carry.
+	"""
+	minEscrowMist: Int!
+	"""
+	Floor on the value-derived review weight.
+	"""
+	minValueWeightBps: Int!
+	"""
+	Share of the overall score given to the buyer role.
+	"""
+	overallBuyerWeightBps: Int!
+	"""
+	Share of the overall score given to the seller role.
+	"""
+	overallSellerWeightBps: Int!
+	"""
+	Platform fee in basis points, frozen into each offer.
+	"""
+	platformFeeBps: Int!
+	"""
+	Bayesian prior mean in milli-stars (3000 is 3.0 stars).
+	"""
+	priorMeanMilli: Int!
+	"""
+	Bayesian prior weight in basis points of review weight.
+	"""
+	priorWeightBps: Int!
+	"""
+	Grace period after the settle deadline before anyone may release payment to the seller.
+	"""
+	releaseGraceMs: Int!
+	"""
+	How long after settlement either party may review.
+	"""
+	reviewWindowMs: Int!
+	"""
+	Longest settle window.
+	"""
+	settleWindowMaxMs: Int!
+	"""
+	Shortest settle window after delivery.
+	"""
+	settleWindowMinMs: Int!
+	"""
+	When the configuration was last updated.
+	"""
+	time: DateTime!
+	"""
+	Last update timestamp (epoch milliseconds).
+	"""
+	timestampMs: Int!
+	"""
+	Transaction ID of the last config update.
+	"""
+	transactionId: String!
+	"""
+	Address that last updated the configuration.
+	"""
+	updatedBy: String!
+	"""
+	Escrow that earns a full 1.0 review weight.
+	"""
+	valueRefMist: Int!
+}
+
 type TipSummary {
 	amount: Int!
 	createdAt: Int!
+	organizationId: String
 	recipient: MySoAddress!
 	"""
 	Profile of the tip recipient.
@@ -5142,6 +10415,29 @@ type TipSummary {
 	Profile of the tipper.
 	"""
 	tipperProfile: ProfileSummary
+}
+
+type TraderReturnLeaderboardEntry {
+	metrics: SptPortfolioMetrics!
+	rank: Int!
+	"""
+	Explicit metric name (e.g. windowReturnPct vs lifetimeRoiPct).
+	"""
+	sortMetric: String!
+	sortValue: Float!
+	wallet: String!
+}
+
+enum TraderReturnSort {
+	HIGHEST_LIFETIME_ROI
+	HIGHEST_LIFETIME_NET_PL
+	HIGHEST_WINDOW_NET_PL
+	"""
+	Window P/L divided by capital-at-risk. Not delta lifetime ROI.
+	"""
+	HIGHEST_WINDOW_RETURN_PCT
+	HIGHEST_REALIZED_PL_IN_WINDOW
+	LARGEST_PORTFOLIO_VALUE
 }
 
 """
@@ -5505,6 +10801,14 @@ type UpgradeCommand {
 	upgradeTicket: TransactionArgument
 }
 
+type UsageDecisionSnapshot {
+	bindingId: Int!
+	playbackPermitted: Boolean!
+	policyPlaybackPermitted: Boolean!
+	policyReasonCode: Int!
+	policyVersionAtDecision: Int!
+}
+
 type UserSignature {
 	"""
 	The signature bytes, Base64-encoded.
@@ -5512,6 +10816,42 @@ type UserSignature {
 	For complex signatures: flag || bcs_serialized_struct
 	"""
 	signatureBytes: Base64
+}
+
+type UsernameAvailability {
+	available: Boolean!
+	beneficiaryId: String
+	beneficiaryProvisioned: Boolean!
+	listingSellerProfileId: String
+	lockReasons: [UsernameLockReason!]!
+	marketplaceListed: Boolean!
+	registryClaimed: Boolean!
+	registryProfileId: String
+	unavailableReasons: [UsernameUnavailableReason!]!
+	username: String!
+}
+
+"""
+Active on-chain reservation for a username (PoC beneficiary provision or marketplace listing).
+"""
+enum UsernameLockReason {
+	BENEFICIARY
+	MARKETPLACE
+}
+
+type UsernameRegistry {
+	profileId: String!
+	transactionId: String!
+	username: String!
+}
+
+"""
+Why a username is unavailable for registration.
+"""
+enum UsernameUnavailableReason {
+	REGISTRY_CLAIMED
+	BENEFICIARY_PROVISIONED
+	MARKETPLACE_LISTED
 }
 
 type Validator {
@@ -5606,108 +10946,83 @@ input VersionFilter {
 }
 
 type VestingLeaderboardEntry {
-	"""
-	Number of active vesting wallets.
-	"""
 	activeWallets: Int!
 	"""
-	Number of completed vesting wallets.
+	Fully-qualified Move type of the vested coin; totals are per coin.
 	"""
+	coinType: String!
 	completedWallets: Int!
-	"""
-	Owner address.
-	"""
 	ownerAddress: MySoAddress!
-	"""
-	Total amount claimed across all wallets.
-	"""
 	totalClaimed: Int!
-	"""
-	Total amount vested across all wallets.
-	"""
 	totalVested: Int!
-	"""
-	User profile summary.
-	"""
 	user: ProfileSummary!
 }
 
 type VestingLeaderboardResponse {
-	"""
-	Leaderboard entries.
-	"""
 	entries: [VestingLeaderboardEntry!]!
-	"""
-	Total number of unique owners.
-	"""
 	total: Int!
 }
 
 type VestingWallet {
-	"""
-	Amount already claimed.
-	"""
+	claimableAmount: Int!
 	claimedAmount: Int!
-	"""
-	Claimed percentage (0-100).
-	"""
 	claimedPercentage: Float!
 	"""
-	When the wallet was created (ISO 8601).
+	Fully-qualified Move type of the vested coin, e.g. `0x2::myso::MYSO`.
 	"""
-	createdAt: String!
-	"""
-	Curve factor (1000 = linear).
-	"""
-	curveFactor: Int!
-	"""
-	Vesting duration (ms).
-	"""
-	duration: Int!
-	"""
-	End time (ms since epoch).
-	"""
+	coinType: String!
+	createdAt: Int!
 	endTime: Int!
-	"""
-	Whether vesting has ended.
-	"""
 	hasEnded: Boolean!
-	"""
-	Whether vesting has started.
-	"""
 	hasStarted: Boolean!
-	"""
-	Owner address.
-	"""
+	nextCliff: GraphVestingPiece
 	ownerAddress: MySoAddress!
-	"""
-	Profile of the vesting wallet owner.
-	"""
 	ownerProfile: ProfileSummary
-	"""
-	Remaining balance.
-	"""
+	pieces: [GraphVestingPiece!]!
 	remainingBalance: Int!
-	"""
-	Vesting start time (ms since epoch).
-	"""
+	scheduleEnd: Int!
 	startTime: Int!
-	"""
-	Total amount vested.
-	"""
 	totalAmount: Int!
-	"""
-	Transaction ID that created the wallet.
-	"""
 	transactionId: String!
-	"""
-	Vesting progress (0.0-1.0).
-	"""
 	vestingProgress: Float!
-	"""
-	Vesting wallet ID (object address).
-	"""
 	walletId: String!
+}
+
+type VoteDecryptionFailure {
+	attemptedAt: Int!
+	failureReason: String!
+	proposalId: String!
+	voterAddress: MySoAddress!
+}
+
+type Wallet {
+	address: MySoAddress!
+	badges(limit: Int, offset: Int): [ProfileBadge!]
+	blockedCount: Int
+	blockedPlatforms(limit: Int, offset: Int): [BlockedPlatformSummary!]
+	blockedProfiles(limit: Int, offset: Int): [BlockedProfileSummary!]
+	followers(viewer: MySoAddress, limit: Int, offset: Int): [ProfileSummary!]
+	followersCount: Int
+	following(viewer: MySoAddress, limit: Int, offset: Int): [ProfileSummary!]
+	followingCount: Int
+	id: ID!
+	mutualConnections(viewer: MySoAddress!, limit: Int, offset: Int): [ProfileSummary!]
+	mydataRecords(limit: Int, offset: Int): [MyDataRecord!]
+	platformMemberships(limit: Int, offset: Int): [PlatformMembershipSummary!]
+	platformMembershipsPage(limit: Int, offset: Int): PlatformMembershipPage
+	platformMembershipsTotal: Int
+	pnl(windows: [ProfilePnLWindow!]): [ProfilePnLWindowStats!]
+	profile: Profile
+	recommendations(viewer: MySoAddress, limit: Int, offset: Int): [ProfileSummary!]
+	selectedBadge: SelectedBadge
+	selectedBadgeId: String
+	selectedEcosystemBadge: SelectedBadge
+	selectedEcosystemBadgeId: String
+	subscriptions(serviceId: ID, limit: Int, offset: Int): [ProfileSubscription!]
+	"""
+	Verified X handle from the wallet's soulbound Verified X badge.
+	"""
+	xUsername: String
 }
 
 """
